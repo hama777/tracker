@@ -69,6 +69,16 @@ def read_data():
         print(row['task'],row['start'],row['end'])
     f.close()
 
+    date_list = []
+    process_list = []
+    with open(datafile,encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if row[0] == "ピアノ" :
+                date_list.append(row[1])
+                process_list.append(row[3])
+
+    print(date_list,process_list)
 
 
 def parse_template() :
