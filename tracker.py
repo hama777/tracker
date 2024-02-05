@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.00"       # 24/01/31
+version = "0.01"       # 24/02/05
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -66,7 +66,7 @@ def read_data():
     df = pd.read_csv(datafile,names=['task', 'start', 'end', 'dur','durtime','memo','tag'])
     for index,row in df.iterrows() :
         f.write(row['dur'] + "\n")
-        print(row['task'],row['start'],row['end'])
+        #print(row['task'],row['start'],row['end'])
     f.close()
 
     date_list = []
@@ -76,9 +76,21 @@ def read_data():
         for row in reader:
             if row[0] == "ピアノ" :
                 date_list.append(row[1])
-                process_list.append(row[3])
+                tt = row[3].replace("'","")
+                hh,mm = tt.split(":")
+                tt  = int(hh) * 60 + int(mm)
+                #print(hh,mm)
+                process_list.append(tt)
 
-    print(date_list,process_list)
+    #print(date_list,process_list)
+    df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date")
+    #print(df)
+    
+    #print(pd.to_datetime(df['ptime']))
+    m = df.resample('D')['ptime'].sum()
+    print(m)
 
 
 def parse_template() :
