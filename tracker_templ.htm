@@ -1,0 +1,53 @@
+<html>
+    <!-- 24/02/06 -->
+    <head>
+        <title>Tracker List</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <link rel="stylesheet" href="tracker.css">
+    </head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '歩数'],
+    %month_graph
+                ]);
+        
+                var options = {
+                    title: '月別歩数',
+                    colors: ['green'] ,
+                    hAxis: {title: '月'},
+                    chartArea: { backgroundColor: '#f1f7f9' },
+                    backgroundColor: '#f1f8e9'
+                };
+        
+                var chart = new google.visualization.ColumnChart(document.getElementById('reception_count'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+    <body>
+        <h1>Tracker List</h1>
+        <span style="font-size:12px;">Ver : %version%</span>
+        <span style="font-size:12px;">実行日時   : %today%</span>
+        <span style="font-size:12px;">最終データ : %lastdate%</span>
+
+        <h2>今月のデータ</h2>
+        <table>
+            <tr>
+                <th>日付</th><th>時間</th>
+            </tr>
+            %daily_table%
+        </table>
+        今月の合計
+        %cur_mon_total% 
+        <br>
+        今月の1日平均
+        %cur_mon_ave%
+        <br>
+
+    </body>
+</html>
