@@ -12,13 +12,13 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.01"       # 24/02/05
+version = "0.02"       # 24/02/06
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 datafile = appdir + "./data.csv"
-templatefile = appdir + "./template.htm"
-resultfile = appdir + "./walk.htm"
+templatefile = appdir + "./tracker_templ.htm"
+resultfile = appdir + "./tracker.htm"
 conffile = appdir + "\\walk.conf"
 logfile = appdir + "\\walk.log"
 
@@ -47,6 +47,9 @@ dailyindex = []  #  毎日のグラフ日付
 dailystep  = []  #  毎日のグラフ歩数
 lasthh = 0       #  何時までのデータか
 yearinfo = {}    #  年ごとの平均
+df = ""
+total_time = 0 
+last_dd = 0
 
 def main_proc():
     global  datafile,logf
@@ -56,18 +59,12 @@ def main_proc():
     
     #read_config()
     read_data()
+    parse_template()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     #logf.close()
 
 def read_data():
-    global datelist,steplist,lasthh
-
-    f = open("test.txt",'w',encoding='utf-8')
-    df = pd.read_csv(datafile,names=['task', 'start', 'end', 'dur','durtime','memo','tag'])
-    for index,row in df.iterrows() :
-        f.write(row['dur'] + "\n")
-        #print(row['task'],row['start'],row['end'])
-    f.close()
+    global df
 
     date_list = []
     process_list = []
@@ -79,25 +76,37 @@ def read_data():
                 tt = row[3].replace("'","")
                 hh,mm = tt.split(":")
                 tt  = int(hh) * 60 + int(mm)
-                #print(hh,mm)
                 process_list.append(tt)
 
-    #print(date_list,process_list)
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-    #print(df)
     
-    #print(pd.to_datetime(df['ptime']))
-    m = df.resample('D')['ptime'].sum()
-    print(m)
-
+def daily_table() :
+    global last_dd,total_time 
+    daily  = df.resample('D')['ptime'].sum()
+    total_time = 0 
+    for dt,v in daily.items() :
+        dt_str = dt.strftime('%m/%d')
+        total_time += v
+        last_dd = dt.day
+        out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
+    print(last_dd)    
 
 def parse_template() :
     global out 
     f = open(templatefile , 'r', encoding='utf-8')
     out = open(resultfile,'w' ,  encoding='utf-8')
     for line in f :
+        if "%daily_table%" in line :
+            daily_table()
+            continue
+        if "%cur_mon_total%" in line :
+            out.write(str(total_time))
+            continue
+        if "%cur_mon_ave%" in line :
+            out.write(str(total_time/last_dd))
+            continue
         if "%lastdate%" in line :
             curdate(line)
             continue
