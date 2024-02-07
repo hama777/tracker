@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.02"       # 24/02/06
+version = "0.03"       # 24/02/07
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,6 +60,7 @@ def main_proc():
     #read_config()
     read_data()
     parse_template()
+    daily_graph()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     #logf.close()
 
@@ -81,7 +82,22 @@ def read_data():
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-    
+
+#   過去30日間の1日ごとの練習時間をグラフにする
+def daily_graph() :
+    df_daily  = df.resample('D')['ptime'].sum()
+    today_dd = datetime.date.today()
+    start_date = today_dd - datetime.timedelta(days=38)
+    while start_date  < today_dd:
+        str_date = start_date.strftime("%Y-%m-%d")
+        try:
+            i = df_daily.loc[str_date]
+        except KeyError:
+            i = 0 
+        print(start_date,i)
+        start_date +=  datetime.timedelta(days=1)
+
+
 def daily_table() :
     global last_dd,total_time 
     daily  = df.resample('D')['ptime'].sum()
@@ -91,7 +107,7 @@ def daily_table() :
         total_time += v
         last_dd = dt.day
         out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
-    print(last_dd)    
+    #print(last_dd)    
 
 def parse_template() :
     global out 
