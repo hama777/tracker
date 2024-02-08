@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.03"       # 24/02/07
+version = "0.04"       # 24/02/08
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,7 +60,7 @@ def main_proc():
     #read_config()
     read_data()
     parse_template()
-    daily_graph()
+    #daily_graph()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     #logf.close()
 
@@ -95,6 +95,9 @@ def daily_graph() :
         except KeyError:
             i = 0 
         print(start_date,i)
+        mm = start_date.month
+        dd = start_date.day
+        out.write(f"['{mm:02}/{dd:02}',{i:5.0f}],")
         start_date +=  datetime.timedelta(days=1)
 
 
@@ -116,6 +119,9 @@ def parse_template() :
     for line in f :
         if "%daily_table%" in line :
             daily_table()
+            continue
+        if "%daily_graph%" in line :
+            daily_graph()
             continue
         if "%cur_mon_total%" in line :
             out.write(str(total_time))
