@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/02/06 -->
+    <!-- 24/02/08 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -13,7 +13,7 @@
             function() {
                 var data = google.visualization.arrayToDataTable([
         [       '', '歩数'],
-    %month_graph
+    %daily_graph%
                 ]);
         
                 var options = {
@@ -24,7 +24,7 @@
                     backgroundColor: '#f1f8e9'
                 };
         
-                var chart = new google.visualization.ColumnChart(document.getElementById('reception_count'));
+                var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph'));
                 chart.draw(data, options);
             }
         );
@@ -36,12 +36,14 @@
         <span style="font-size:12px;">最終データ : %lastdate%</span>
 
         <h2>今月のデータ</h2>
-        <table>
+        <div id="daily_graph" style="width:900px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
+
+        <!-- <table>
             <tr>
                 <th>日付</th><th>時間</th>
             </tr>
             %daily_table%
-        </table>
+        </table> -->
         今月の合計
         %cur_mon_total% 
         <br>
