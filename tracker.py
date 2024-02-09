@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.04"       # 24/02/08
+version = "0.05"       # 24/02/09
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -48,8 +48,11 @@ dailystep  = []  #  毎日のグラフ歩数
 lasthh = 0       #  何時までのデータか
 yearinfo = {}    #  年ごとの平均
 df = ""
-total_time = 0 
+total_mm_time = 0  # 今月の総時間
+
 last_dd = 0
+daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
+
 
 def main_proc():
     global  datafile,logf
@@ -59,6 +62,7 @@ def main_proc():
     
     #read_config()
     read_data()
+    totalling_daily_data()
     parse_template()
     #daily_graph()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
@@ -83,26 +87,45 @@ def read_data():
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
 
-#   過去30日間の1日ごとの練習時間をグラフにする
-def daily_graph() :
+#   過去30日間の1日ごとの練習時間を集計する
+def totalling_daily_data() :
+    global daily_data,total_mm_time
+
     df_daily  = df.resample('D')['ptime'].sum()
     today_dd = datetime.date.today()
+    cur_month = today_dd.month   #  今月
     start_date = today_dd - datetime.timedelta(days=38)
     while start_date  < today_dd:
         str_date = start_date.strftime("%Y-%m-%d")
         try:
-            i = df_daily.loc[str_date]
+            ptime = df_daily.loc[str_date]
         except KeyError:
-            i = 0 
-        print(start_date,i)
+            ptime = 0 
+        #print(start_date,i)
         mm = start_date.month
         dd = start_date.day
-        out.write(f"['{mm:02}/{dd:02}',{i:5.0f}],")
+        item_list = []
+        date_str = f'{mm:02}/{dd:02}'
+        item_list.append(date_str)
+        item_list.append(ptime)
+        daily_data.append(item_list)
+        if cur_month == mm :   #  今月のデータ
+            total_mm_time += ptime
+            print(total_mm_time)
         start_date +=  datetime.timedelta(days=1)
+
+#   過去30日間の1日ごとの練習時間をグラフにする
+def daily_graph() :
+    for item in daily_data :
+        date_str,ptimte = item
+        #print(ptimte)
+        out.write(f"['{date_str}',{ptimte:5.0f}],")
 
 
 def daily_table() :
     global last_dd,total_time 
+    pass 
+
     daily  = df.resample('D')['ptime'].sum()
     total_time = 0 
     for dt,v in daily.items() :
@@ -124,10 +147,10 @@ def parse_template() :
             daily_graph()
             continue
         if "%cur_mon_total%" in line :
-            out.write(str(total_time))
+            out.write(str(total_mm_time))
             continue
         if "%cur_mon_ave%" in line :
-            out.write(str(total_time/last_dd))
+            out.write(str(total_mm_time/datetime.date.today().day))
             continue
         if "%lastdate%" in line :
             curdate(line)
@@ -176,4 +199,3 @@ def curdate(s) :
 
 # ----------------------------------------------------------
 main_proc()
-
