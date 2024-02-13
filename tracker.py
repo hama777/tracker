@@ -12,14 +12,14 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.05"       # 24/02/09
+version = "0.06"       # 24/02/13
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 datafile = appdir + "./data.csv"
 templatefile = appdir + "./tracker_templ.htm"
 resultfile = appdir + "./tracker.htm"
-conffile = appdir + "\\walk.conf"
+conffile = appdir + "./tracker.conf"
 logfile = appdir + "\\walk.log"
 
 #  統計情報  {キー  yymm  : 値   辞書   キー max min ave  maxdate mindate}
@@ -60,7 +60,7 @@ def main_proc():
     #logf = open(logfile,'a',encoding='utf-8')
     #logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     
-    #read_config()
+    read_config()
     read_data()
     totalling_daily_data()
     parse_template()
