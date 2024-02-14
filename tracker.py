@@ -12,11 +12,12 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.06"       # 24/02/13
+version = "0.07"       # 24/02/14
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
-datafile = appdir + "./data.csv"
+datafile = appdir + "./CSVFile.csv"
+backfile = appdir + "./data.bak"
 templatefile = appdir + "./tracker_templ.htm"
 resultfile = appdir + "./tracker.htm"
 conffile = appdir + "./tracker.conf"
@@ -64,6 +65,7 @@ def main_proc():
     read_data()
     totalling_daily_data()
     parse_template()
+    post_process_datafile()
     #daily_graph()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     #logf.close()
@@ -87,6 +89,11 @@ def read_data():
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
 
+def post_process_datafile() :
+    if debug == 0 :
+        shutil.copyfile(datafile, backfile)
+        os.remove(datafile)
+
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
     global daily_data,total_mm_time
@@ -101,7 +108,6 @@ def totalling_daily_data() :
             ptime = df_daily.loc[str_date]
         except KeyError:
             ptime = 0 
-        #print(start_date,i)
         mm = start_date.month
         dd = start_date.day
         item_list = []
@@ -111,16 +117,13 @@ def totalling_daily_data() :
         daily_data.append(item_list)
         if cur_month == mm :   #  今月のデータ
             total_mm_time += ptime
-            print(total_mm_time)
         start_date +=  datetime.timedelta(days=1)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
     for item in daily_data :
         date_str,ptimte = item
-        #print(ptimte)
         out.write(f"['{date_str}',{ptimte:5.0f}],")
-
 
 def daily_table() :
     global last_dd,total_time 
@@ -135,6 +138,16 @@ def daily_table() :
         out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
     #print(last_dd)    
 
+#  今月の情報
+def cur_mon_info() :
+    hh = total_mm_time // 60 
+    mm = total_mm_time % 60 
+    out.write(f'合計  {hh}:{mm:02} / ')
+    ave = int(total_mm_time/datetime.date.today().day)
+    hh = ave // 60 
+    mm = ave % 60 
+    out.write(f'平均  {hh}:{mm:02}')
+
 def parse_template() :
     global out 
     f = open(templatefile , 'r', encoding='utf-8')
@@ -146,11 +159,8 @@ def parse_template() :
         if "%daily_graph%" in line :
             daily_graph()
             continue
-        if "%cur_mon_total%" in line :
-            out.write(str(total_mm_time))
-            continue
-        if "%cur_mon_ave%" in line :
-            out.write(str(total_mm_time/datetime.date.today().day))
+        if "%cur_mon_info%" in line :
+            cur_mon_info()
             continue
         if "%lastdate%" in line :
             curdate(line)
