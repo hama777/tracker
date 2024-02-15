@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.07"       # 24/02/14
+version = "0.08"       # 24/02/15
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -50,6 +50,7 @@ lasthh = 0       #  何時までのデータか
 yearinfo = {}    #  年ごとの平均
 df = ""
 total_mm_time = 0  # 今月の総時間
+total_30_time = 0  # 過去30日の総時間
 
 last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
@@ -96,12 +97,12 @@ def post_process_datafile() :
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
-    global daily_data,total_mm_time
+    global daily_data,total_mm_time,total_30_time
 
     df_daily  = df.resample('D')['ptime'].sum()
     today_dd = datetime.date.today()
     cur_month = today_dd.month   #  今月
-    start_date = today_dd - datetime.timedelta(days=38)
+    start_date = today_dd - datetime.timedelta(days=30)
     while start_date  < today_dd:
         str_date = start_date.strftime("%Y-%m-%d")
         try:
@@ -117,6 +118,7 @@ def totalling_daily_data() :
         daily_data.append(item_list)
         if cur_month == mm :   #  今月のデータ
             total_mm_time += ptime
+        total_30_time += ptime
         start_date +=  datetime.timedelta(days=1)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
@@ -142,11 +144,19 @@ def daily_table() :
 def cur_mon_info() :
     hh = total_mm_time // 60 
     mm = total_mm_time % 60 
-    out.write(f'合計  {hh}:{mm:02} / ')
+    out.write(f'<br>今月 合計  {hh}:{mm:02} / ')
     ave = int(total_mm_time/datetime.date.today().day)
     hh = ave // 60 
     mm = ave % 60 
-    out.write(f'平均  {hh}:{mm:02}')
+    out.write(f'平均  {hh}:{mm:02} <br>')
+
+    hh = total_30_time // 60 
+    mm = total_30_time % 60 
+    out.write(f'30日 合計  {hh}:{mm:02} / ')
+    ave = int(total_30_time/datetime.date.today().day)
+    hh = ave // 60 
+    mm = ave % 60 
+    out.write(f'平均  {hh}:{mm:02} ')
 
 def parse_template() :
     global out 
