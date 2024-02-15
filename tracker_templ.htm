@@ -12,13 +12,14 @@
         google.setOnLoadCallback(
             function() {
                 var data = google.visualization.arrayToDataTable([
-        [       '', '歩数'],
+        [       '', '時間'],
     %daily_graph%
                 ]);
         
                 var options = {
                     title: '日別時間',
                     colors: ['green'] ,
+                    vAxis: {minValue:0,ticks:[0,30,60,90,120]},
                     hAxis: {title: '日付'},
                     chartArea: { backgroundColor: '#f1f7f9' },
                     backgroundColor: '#f1f8e9'
@@ -36,7 +37,7 @@
         <span style="font-size:12px;">最終データ : %lastdate%</span>
 
         <h2>今月のデータ</h2>
-        <div id="daily_graph" style="width:900px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <div id="daily_graph" style="width:1000px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <!-- <table>
             <tr>
