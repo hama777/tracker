@@ -12,12 +12,14 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.08"       # 24/02/15
+version = "0.09"       # 24/02/16
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
-datafile = appdir + "./CSVFile.csv"
+dataname = "./CSVFile.csv"
+datafile = ""
 backfile = appdir + "./data.bak"
+datadir = appdir
 templatefile = appdir + "./tracker_templ.htm"
 resultfile = appdir + "./tracker.htm"
 conffile = appdir + "./tracker.conf"
@@ -63,6 +65,7 @@ def main_proc():
     #logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     
     read_config()
+
     read_data()
     totalling_daily_data()
     parse_template()
@@ -72,8 +75,9 @@ def main_proc():
     #logf.close()
 
 def read_data():
-    global df
+    global df,datafile
 
+    datafile = datadir + dataname
     date_list = []
     process_list = []
     with open(datafile,encoding='utf-8') as f:
@@ -91,9 +95,17 @@ def read_data():
     df = df.set_index("date")
 
 def post_process_datafile() :
-    if debug == 0 :
+    if debug == 1 :
+        return 
+    if os.path.isfile(datafile) :
         shutil.copyfile(datafile, backfile)
         os.remove(datafile)
+    file = datadir + "/CSVReport.csv"
+    if os.path.isfile(file) :
+        os.remove(file)
+    file = datadir + "/report.ping"
+    if os.path.isfile(file) :
+        os.remove(file)
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
@@ -153,7 +165,7 @@ def cur_mon_info() :
     hh = total_30_time // 60 
     mm = total_30_time % 60 
     out.write(f'30日 合計  {hh}:{mm:02} / ')
-    ave = int(total_30_time/datetime.date.today().day)
+    ave = int(total_30_time/30)
     hh = ave // 60 
     mm = ave % 60 
     out.write(f'平均  {hh}:{mm:02} ')
@@ -186,7 +198,7 @@ def parse_template() :
 
 
 def read_config() : 
-    global ftp_host,ftp_user,ftp_pass,ftp_url,debug,datafile,pixela_url,pixela_token
+    global ftp_host,ftp_user,ftp_pass,ftp_url,debug,datadir,pixela_url,pixela_token
     if not os.path.isfile(conffile) :
         debug = 1 
         return
@@ -196,7 +208,7 @@ def read_config() :
     ftp_user = conf.readline().strip()
     ftp_pass = conf.readline().strip()
     ftp_url = conf.readline().strip()
-    datafile = conf.readline().strip()
+    datadir = conf.readline().strip()
     pixela_url = conf.readline().strip()
     pixela_token = conf.readline().strip()
     conf.close()
