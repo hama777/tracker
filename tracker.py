@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.09"       # 24/02/16
+version = "0.10"       # 24/02/17
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -80,6 +80,8 @@ def read_data():
     datafile = datadir + dataname
     date_list = []
     process_list = []
+    if debug == 1 :
+        datafile = backfile
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
@@ -124,7 +126,8 @@ def totalling_daily_data() :
         mm = start_date.month
         dd = start_date.day
         item_list = []
-        date_str = f'{mm:02}/{dd:02}'
+        date_str = f'{dd:02}'
+        #date_str = f'{mm:02}/{dd:02}'
         item_list.append(date_str)
         item_list.append(ptime)
         daily_data.append(item_list)
@@ -156,7 +159,7 @@ def daily_table() :
 def cur_mon_info() :
     hh = total_mm_time // 60 
     mm = total_mm_time % 60 
-    out.write(f'<br>今月 合計  {hh}:{mm:02} / ')
+    out.write(f'今月 合計  {hh}:{mm:02} / ')
     ave = int(total_mm_time/datetime.date.today().day)
     hh = ave // 60 
     mm = ave % 60 
