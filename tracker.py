@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.10"       # 24/02/17
+version = "0.11"       # 24/02/18
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -159,19 +159,20 @@ def daily_table() :
 def cur_mon_info() :
     hh = total_mm_time // 60 
     mm = total_mm_time % 60 
-    out.write(f'今月 合計  {hh}:{mm:02} / ')
+    out.write(f'')
+    out.write(f'<tr><td>今月</td><td>{hh}:{mm:02}</td>')
     ave = int(total_mm_time/datetime.date.today().day)
     hh = ave // 60 
     mm = ave % 60 
-    out.write(f'平均  {hh}:{mm:02} <br>')
+    out.write(f'<td>{hh}:{mm:02}</td></tr>')
 
     hh = total_30_time // 60 
     mm = total_30_time % 60 
-    out.write(f'30日 合計  {hh}:{mm:02} / ')
+    out.write(f'<tr><td>30日</td><td>{hh}:{mm:02}</td> ')
     ave = int(total_30_time/30)
     hh = ave // 60 
     mm = ave % 60 
-    out.write(f'平均  {hh}:{mm:02} ')
+    out.write(f'<td>{hh}:{mm:02}</td></tr> ')
 
 def parse_template() :
     global out 
