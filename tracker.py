@@ -12,17 +12,17 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.11"       # 24/02/18
+version = "0.12"       # 24/02/19
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
-dataname = "./CSVFile.csv"
+dataname = "/CSVFile.csv"
 datafile = ""
-backfile = appdir + "./data.bak"
+backfile = appdir + "/data.bak"
 datadir = appdir
-templatefile = appdir + "./tracker_templ.htm"
-resultfile = appdir + "./tracker.htm"
-conffile = appdir + "./tracker.conf"
+templatefile = appdir + "/tracker_templ.htm"
+resultfile = appdir + "/tracker.htm"
+conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\walk.log"
 
 #  統計情報  {キー  yymm  : 値   辞書   キー max min ave  maxdate mindate}
@@ -56,7 +56,7 @@ total_30_time = 0  # 過去30日の総時間
 
 last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
-
+daily_df = ""    #  日ごとのデータ df
 
 def main_proc():
     global  datafile,logf
@@ -69,6 +69,7 @@ def main_proc():
     read_data()
     totalling_daily_data()
     parse_template()
+    ftp_upload()
     post_process_datafile()
     #daily_graph()
     #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
@@ -81,7 +82,8 @@ def read_data():
     date_list = []
     process_list = []
     if debug == 1 :
-        datafile = backfile
+        if not os.path.isfile(datafile) :
+            datafile = backfile
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
@@ -105,7 +107,7 @@ def post_process_datafile() :
     file = datadir + "/CSVReport.csv"
     if os.path.isfile(file) :
         os.remove(file)
-    file = datadir + "/report.ping"
+    file = datadir + "/report.png"
     if os.path.isfile(file) :
         os.remove(file)
 
@@ -114,9 +116,12 @@ def totalling_daily_data() :
     global daily_data,total_mm_time,total_30_time
 
     df_daily  = df.resample('D')['ptime'].sum()
+    date_list = []
+    ptime_list = []
     today_dd = datetime.date.today()
     cur_month = today_dd.month   #  今月
     start_date = today_dd - datetime.timedelta(days=30)
+
     while start_date  < today_dd:
         str_date = start_date.strftime("%Y-%m-%d")
         try:
@@ -134,7 +139,17 @@ def totalling_daily_data() :
         if cur_month == mm :   #  今月のデータ
             total_mm_time += ptime
         total_30_time += ptime
+
+        if ptime != 0 :
+            date_list.append(start_date)
+            ptime_list.append(ptime)
+
         start_date +=  datetime.timedelta(days=1)
+
+    #  1日ごとデータのdfを作成する
+    daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    print(daily_df)
+    #sortstep = cur_dfyymm.sort_values('step',ascending=False)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
