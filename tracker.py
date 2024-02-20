@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.12"       # 24/02/19
+version = "0.13"       # 24/02/20
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -113,7 +113,7 @@ def post_process_datafile() :
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
-    global daily_data,total_mm_time,total_30_time
+    global daily_data,total_mm_time,total_30_time,daily_df
 
     df_daily  = df.resample('D')['ptime'].sum()
     date_list = []
@@ -148,8 +148,7 @@ def totalling_daily_data() :
 
     #  1日ごとデータのdfを作成する
     daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    print(daily_df)
-    #sortstep = cur_dfyymm.sort_values('step',ascending=False)
+    #print(daily_df)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
@@ -179,7 +178,8 @@ def cur_mon_info() :
     ave = int(total_mm_time/datetime.date.today().day)
     hh = ave // 60 
     mm = ave % 60 
-    out.write(f'<td>{hh}:{mm:02}</td></tr>')
+    out.write(f'<td>{hh}:{mm:02}</td><td></td></tr>')
+
 
     hh = total_30_time // 60 
     mm = total_30_time % 60 
@@ -187,7 +187,28 @@ def cur_mon_info() :
     ave = int(total_30_time/30)
     hh = ave // 60 
     mm = ave % 60 
-    out.write(f'<td>{hh}:{mm:02}</td></tr> ')
+    out.write(f'<td>{hh}:{mm:02}</td>')
+    
+    sort_df = daily_df.sort_values('ptime',ascending=False)
+    max_ptime = sort_df.at[1,'ptime']
+    max_date = sort_df.at[1,'date']
+    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
+
+def ftp_upload() : 
+    if debug == 1 :
+        return 
+    with FTP_TLS(host=ftp_host, user=ftp_user, passwd=ftp_pass) as ftp:
+        ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
+
+def today(s):
+    d = datetime.datetime.today().strftime("%m/%d %H:%M")
+    s = s.replace("%today%",d)
+    out.write(s)
+
+def curdate(s) :
+    d = f'{lastdate} {lasthh}時'
+    s = s.replace("%lastdate%",d)
+    out.write(s)
 
 def parse_template() :
     global out 
@@ -210,6 +231,9 @@ def parse_template() :
             s = line.replace("%version%",version)
             out.write(s)
             continue
+        if "%today%" in line :
+            today(line)
+            continue
         out.write(line)
 
     f.close()
@@ -230,23 +254,9 @@ def read_config() :
     datadir = conf.readline().strip()
     pixela_url = conf.readline().strip()
     pixela_token = conf.readline().strip()
+    debug = int(conf.readline().strip())
     conf.close()
 
-def ftp_upload() : 
-    if debug == 1 :
-        return 
-    with FTP_TLS(host=ftp_host, user=ftp_user, passwd=ftp_pass) as ftp:
-        ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
-
-def today(s):
-    d = datetime.datetime.today().strftime("%m/%d %H:%M")
-    s = s.replace("%today%",d)
-    out.write(s)
-
-def curdate(s) :
-    d = f'{lastdate} {lasthh}時'
-    s = s.replace("%lastdate%",d)
-    out.write(s)
 
 # ----------------------------------------------------------
 main_proc()
