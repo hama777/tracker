@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.13"       # 24/02/20
+version = "0.14"       # 24/02/22
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -188,11 +188,26 @@ def cur_mon_info() :
     hh = ave // 60 
     mm = ave % 60 
     out.write(f'<td>{hh}:{mm:02}</td>')
-    
+
     sort_df = daily_df.sort_values('ptime',ascending=False)
-    max_ptime = sort_df.at[1,'ptime']
-    max_date = sort_df.at[1,'date']
+    #sort_df.reset_index()
+    print(sort_df)
+    #max_ptime = sort_df.at[0,'ptime']
+    max_ptime = sort_df['ptime'].iloc[0]
+    print(max_ptime)
+    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
     out.write(f'<td>{max_ptime}({max_date})</td></tr>')
+
+def ranking() :
+    sort_df = daily_df.sort_values('ptime',ascending=False)
+    i = 0 
+    for _ , row in sort_df.iterrows() :
+        i += 1 
+        date_str = row['date'].strftime('%m/%d (%a)')
+        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{row['ptime']}</td><td>{date_str}</td></tr>")
+        if i >= 10 :
+            break
+
 
 def ftp_upload() : 
     if debug == 1 :
@@ -223,6 +238,9 @@ def parse_template() :
             continue
         if "%cur_mon_info%" in line :
             cur_mon_info()
+            continue
+        if "%ranking%" in line :
+            ranking()
             continue
         if "%lastdate%" in line :
             curdate(line)
