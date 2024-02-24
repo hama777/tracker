@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.15"       # 24/02/23
+version = "0.16"       # 24/02/24
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -148,7 +148,12 @@ def totalling_daily_data() :
 
     #  1日ごとデータのdfを作成する
     daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    #print(daily_df)
+
+    #  7日間の移動平均
+    mov_ave_dd = 7 
+    daily_movav  = daily_df['ptime'].rolling(mov_ave_dd).mean()
+
+    print(type(daily_movav))
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
@@ -191,10 +196,10 @@ def cur_mon_info() :
 
     sort_df = daily_df.sort_values('ptime',ascending=False)
     #sort_df.reset_index()
-    print(sort_df)
+    #print(sort_df)
     #max_ptime = sort_df.at[0,'ptime']
     max_ptime = sort_df['ptime'].iloc[0]
-    print(max_ptime)
+    #print(max_ptime)
     max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
     out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
