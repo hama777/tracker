@@ -12,7 +12,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.16"       # 24/02/24
+version = "0.17"       # 24/02/25
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -57,6 +57,7 @@ total_30_time = 0  # 過去30日の総時間
 last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
 daily_df = ""    #  日ごとのデータ df
+daily_all_df = ""    #  日ごとのデータ df
 
 def main_proc():
     global  datafile,logf
@@ -68,6 +69,7 @@ def main_proc():
 
     read_data()
     totalling_daily_data()
+    totalling_daily_data2()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -111,6 +113,31 @@ def post_process_datafile() :
     if os.path.isfile(file) :
         os.remove(file)
 
+#   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  daily_all_df を作成する
+#   daily_all_df は ptime が 0 のデータも含む
+def totalling_daily_data2() :
+    df_daily  = df.resample('D')['ptime'].sum()
+    date_list = []
+    ptime_list = []
+    start_date  = datetime.date(2024, 1, 1)
+    target_date = start_date
+    end_date = datetime.date.today()
+    #  start_date から昨日まで全日付をチェックする
+    while target_date  < end_date:
+        target_date +=  datetime.timedelta(days=1)
+        str_date = target_date.strftime("%Y-%m-%d")
+        try:
+            ptime = df_daily.loc[str_date]
+        except KeyError:          #  日付のデータがなければ ptime は 0
+            ptime = 0 
+        date_list.append(start_date)
+        ptime_list.append(ptime)
+
+        start_date +=  datetime.timedelta(days=1)
+
+    daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    print(daily_all_df)
+
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
     global daily_data,total_mm_time,total_30_time,daily_df
@@ -153,7 +180,7 @@ def totalling_daily_data() :
     mov_ave_dd = 7 
     daily_movav  = daily_df['ptime'].rolling(mov_ave_dd).mean()
 
-    print(type(daily_movav))
+    #print(daily_movav)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
