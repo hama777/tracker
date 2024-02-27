@@ -9,16 +9,17 @@ import pandas as pd
 import requests
 import locale
 import shutil
+import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.17"       # 24/02/25
+version = "0.18"       # 24/02/27
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 dataname = "/CSVFile.csv"
 datafile = ""
-backfile = appdir + "/data.bak"
+backfile = appdir + "/save.csv"
 datadir = appdir
 templatefile = appdir + "/tracker_templ.htm"
 resultfile = appdir + "/tracker.htm"
@@ -116,6 +117,8 @@ def post_process_datafile() :
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  daily_all_df を作成する
 #   daily_all_df は ptime が 0 のデータも含む
 def totalling_daily_data2() :
+    global daily_all_df
+
     df_daily  = df.resample('D')['ptime'].sum()
     date_list = []
     ptime_list = []
@@ -136,7 +139,7 @@ def totalling_daily_data2() :
         start_date +=  datetime.timedelta(days=1)
 
     daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    print(daily_all_df)
+    #print(daily_all_df)
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
@@ -177,10 +180,20 @@ def totalling_daily_data() :
     daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
 
     #  7日間の移動平均
-    mov_ave_dd = 7 
-    daily_movav  = daily_df['ptime'].rolling(mov_ave_dd).mean()
+def daily_movav() :
+    mov_ave_dd = 7
+    df_movav  =  daily_all_df
+    df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
+    #print(df_movav)
+    for _ , row in df_movav.iterrows() :
+        ptime = row['ptime']
+        print(ptime)
+        if math.isnan(ptime) :
+            continue
+        print(row['date'],ptime)
+        dd = row['date'].strftime("%m/%d")
+        out.write(f"['{dd}',{row['ptime']:5.0f}],") 
 
-    #print(daily_movav)
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
@@ -273,6 +286,9 @@ def parse_template() :
             continue
         if "%cur_mon_info%" in line :
             cur_mon_info()
+            continue
+        if "%daily_movav%" in line :
+            daily_movav()
             continue
         if "%ranking%" in line :
             ranking()
