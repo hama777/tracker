@@ -6,14 +6,14 @@ import os
 import csv
 import datetime
 import pandas as pd
-import requests
+#import requests
 import locale
 import shutil
 import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.18"       # 24/02/27
+version = "0.19"       # 24/02/29
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,16 +26,6 @@ resultfile = appdir + "/tracker.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\walk.log"
 
-#  統計情報  {キー  yymm  : 値   辞書   キー max min ave  maxdate mindate}
-statinfo = {}
-allinfo = {}
-
-datelist = []
-steplist = []
-yymm_list = []
-ave_list = []
-max_list = []
-min_list = []
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
 df = ""
 out = ""
@@ -45,12 +35,7 @@ pixela_token = ""
 end_year = 2024  #  データが存在する最終年
 
 lastdate = ""    #  最終データ日付
-allrank = ""     #  歩数ランキング
-monrank = ""     #  歩数ランキング  今月
-dailyindex = []  #  毎日のグラフ日付
-dailystep  = []  #  毎日のグラフ歩数
 lasthh = 0       #  何時までのデータか
-yearinfo = {}    #  年ごとの平均
 df = ""
 total_mm_time = 0  # 今月の総時間
 total_30_time = 0  # 過去30日の総時間
@@ -187,19 +172,26 @@ def daily_movav() :
     #print(df_movav)
     for _ , row in df_movav.iterrows() :
         ptime = row['ptime']
-        print(ptime)
+        #print(ptime)
         if math.isnan(ptime) :
             continue
-        print(row['date'],ptime)
+        #print(row['date'],ptime)
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{row['ptime']:5.0f}],") 
 
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
-    for item in daily_data :
-        date_str,ptimte = item
-        out.write(f"['{date_str}',{ptimte:5.0f}],")
+    df30 = daily_all_df.tail(30)
+    for _ , row in df30.iterrows() :
+        print(row['date'],row['ptime'])
+        date_str = row['date'].strftime('%d')
+        out.write(f"['{date_str}',{row['ptime']:5.0f}],")
+
+
+    # for item in daily_data :
+    #     date_str,ptimte = item
+    #     out.write(f"['{date_str}',{ptimte:5.0f}],")
 
 def daily_table() :
     global last_dd,total_time 
