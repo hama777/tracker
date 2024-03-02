@@ -13,7 +13,7 @@ import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "0.19"       # 24/02/29
+version = "0.21"       # 24/03/02
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -24,7 +24,7 @@ datadir = appdir
 templatefile = appdir + "/tracker_templ.htm"
 resultfile = appdir + "/tracker.htm"
 conffile = appdir + "/tracker.conf"
-logfile = appdir + "\\walk.log"
+logfile = appdir + "\\tracker.log"
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
 df = ""
@@ -48,8 +48,8 @@ daily_all_df = ""    #  日ごとのデータ df
 def main_proc():
     global  datafile,logf
     locale.setlocale(locale.LC_TIME, '')
-    #logf = open(logfile,'a',encoding='utf-8')
-    #logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    logf = open(logfile,'a',encoding='utf-8')
+    logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     
     read_config()
 
@@ -60,8 +60,8 @@ def main_proc():
     ftp_upload()
     post_process_datafile()
     #daily_graph()
-    #logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    #logf.close()
+    logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    logf.close()
 
 def read_data():
     global df,datafile
@@ -72,6 +72,12 @@ def read_data():
     if debug == 1 :
         if not os.path.isfile(datafile) :
             datafile = backfile
+    if not os.path.isfile(datafile) :
+        logf.write("\n datafile not found \n" )
+        logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        logf.close()
+        exit()
+
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
@@ -105,6 +111,7 @@ def totalling_daily_data2() :
     global daily_all_df
 
     df_daily  = df.resample('D')['ptime'].sum()
+    print(df_daily)
     date_list = []
     ptime_list = []
     start_date  = datetime.date(2024, 1, 1)
@@ -112,19 +119,19 @@ def totalling_daily_data2() :
     end_date = datetime.date.today()
     #  start_date から昨日まで全日付をチェックする
     while target_date  < end_date:
-        target_date +=  datetime.timedelta(days=1)
         str_date = target_date.strftime("%Y-%m-%d")
         try:
             ptime = df_daily.loc[str_date]
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
-        date_list.append(start_date)
+        #print(target_date,ptime)
+        date_list.append(target_date)
         ptime_list.append(ptime)
+        target_date +=  datetime.timedelta(days=1)
 
-        start_date +=  datetime.timedelta(days=1)
 
     daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    #print(daily_all_df)
+    print(daily_all_df)
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
@@ -167,7 +174,7 @@ def totalling_daily_data() :
     #  7日間の移動平均
 def daily_movav() :
     mov_ave_dd = 7
-    df_movav  =  daily_all_df
+    df_movav  =  daily_all_df.copy()
     df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
     #print(df_movav)
     for _ , row in df_movav.iterrows() :
@@ -184,7 +191,7 @@ def daily_movav() :
 def daily_graph() :
     df30 = daily_all_df.tail(30)
     for _ , row in df30.iterrows() :
-        print(row['date'],row['ptime'])
+        #print(row['date'],row['ptime'])
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['ptime']:5.0f}],")
 
@@ -226,7 +233,9 @@ def cur_mon_info() :
     mm = ave % 60 
     out.write(f'<td>{hh}:{mm:02}</td>')
 
-    sort_df = daily_df.sort_values('ptime',ascending=False)
+    sort_df = daily_all_df.copy()
+    sort_df = sort_df.tail(30)
+    sort_df = sort_df.sort_values('ptime',ascending=False)
     #sort_df.reset_index()
     #print(sort_df)
     #max_ptime = sort_df.at[0,'ptime']
@@ -236,7 +245,8 @@ def cur_mon_info() :
     out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
 def ranking() :
-    sort_df = daily_df.sort_values('ptime',ascending=False)
+    sort_df = daily_all_df.copy()
+    sort_df = sort_df.sort_values('ptime',ascending=False)
     i = 0 
     for _ , row in sort_df.iterrows() :
         i += 1 
