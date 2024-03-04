@@ -6,14 +6,14 @@ import os
 import csv
 import datetime
 import pandas as pd
-#import requests
 import locale
 import shutil
 import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
+import numpy as np
 
-version = "0.21"       # 24/03/02
+version = "0.22"       # 24/03/04
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -106,12 +106,11 @@ def post_process_datafile() :
         os.remove(file)
 
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  daily_all_df を作成する
-#   daily_all_df は ptime が 0 のデータも含む
+#   daily_all_df は ptime が 0 の日(データ)も含む
 def totalling_daily_data2() :
     global daily_all_df
 
     df_daily  = df.resample('D')['ptime'].sum()
-    print(df_daily)
     date_list = []
     ptime_list = []
     start_date  = datetime.date(2024, 1, 1)
@@ -124,14 +123,13 @@ def totalling_daily_data2() :
             ptime = df_daily.loc[str_date]
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
-        #print(target_date,ptime)
         date_list.append(target_date)
         ptime_list.append(ptime)
         target_date +=  datetime.timedelta(days=1)
 
 
     daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    print(daily_all_df)
+    daily_all_df['date'] = pd.to_datetime(daily_all_df["date"])
 
 #   過去30日間の1日ごとの練習時間を集計する
 def totalling_daily_data() :
@@ -155,9 +153,9 @@ def totalling_daily_data() :
         item_list = []
         date_str = f'{dd:02}'
         #date_str = f'{mm:02}/{dd:02}'
-        item_list.append(date_str)
-        item_list.append(ptime)
-        daily_data.append(item_list)
+        #item_list.append(date_str)
+        #item_list.append(ptime)
+        #daily_data.append(item_list)
         if cur_month == mm :   #  今月のデータ
             total_mm_time += ptime
         total_30_time += ptime
@@ -169,20 +167,17 @@ def totalling_daily_data() :
         start_date +=  datetime.timedelta(days=1)
 
     #  1日ごとデータのdfを作成する
-    daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    #daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
 
     #  7日間の移動平均
 def daily_movav() :
     mov_ave_dd = 7
     df_movav  =  daily_all_df.copy()
     df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
-    #print(df_movav)
     for _ , row in df_movav.iterrows() :
         ptime = row['ptime']
-        #print(ptime)
-        if math.isnan(ptime) :
+        if pd.isna(ptime) :
             continue
-        #print(row['date'],ptime)
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{row['ptime']:5.0f}],") 
 
@@ -191,14 +186,9 @@ def daily_movav() :
 def daily_graph() :
     df30 = daily_all_df.tail(30)
     for _ , row in df30.iterrows() :
-        #print(row['date'],row['ptime'])
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['ptime']:5.0f}],")
 
-
-    # for item in daily_data :
-    #     date_str,ptimte = item
-    #     out.write(f"['{date_str}',{ptimte:5.0f}],")
 
 def daily_table() :
     global last_dd,total_time 
@@ -215,6 +205,10 @@ def daily_table() :
 
 #  今月の情報
 def cur_mon_info() :
+    df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
+    #cur_ptime = df_month.iloc[-1,0]
+    cur_ptime = df_month.iloc[-1]['ptime']
+    print(cur_ptime)
     hh = total_mm_time // 60 
     mm = total_mm_time % 60 
     out.write(f'')
