@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.22"       # 24/03/04
+version = "0.23"       # 24/03/05
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -203,17 +203,16 @@ def daily_table() :
         out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
     #print(last_dd)    
 
-#  今月の情報
+#  サマリ
 def cur_mon_info() :
     df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
     #cur_ptime = df_month.iloc[-1,0]
     cur_ptime = df_month.iloc[-1]['ptime']
-    print(cur_ptime)
-    hh = total_mm_time // 60 
-    mm = total_mm_time % 60 
+    hh = cur_ptime // 60 
+    mm = cur_ptime % 60 
     out.write(f'')
     out.write(f'<tr><td>今月</td><td>{hh}:{mm:02}</td>')
-    ave = int(total_mm_time/datetime.date.today().day)
+    ave = int(cur_ptime/datetime.date.today().day)
     hh = ave // 60 
     mm = ave % 60 
     out.write(f'<td>{hh}:{mm:02}</td><td></td></tr>')
@@ -237,6 +236,24 @@ def cur_mon_info() :
     #print(max_ptime)
     max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
     out.write(f'<td>{max_ptime}({max_date})</td></tr>')
+
+    prev_ptime = df_month.iloc[-2]['ptime']
+    print(prev_ptime)
+    today = datetime.datetime.today()
+    this_month = datetime.datetime(today.year, today.month, 1)
+    last_month_end = this_month - datetime.timedelta(days=1)
+    dd = last_month_end.day
+    print(dd)
+    hh = prev_ptime // 60 
+    mm = prev_ptime % 60 
+    out.write(f'<tr><td>先月</td><td>{hh}:{mm:02}</td> ')
+    ave = int(prev_ptime/dd)
+    hh = ave // 60 
+    mm = ave % 60 
+    out.write(f'<td>{hh}:{mm:02}</td><td></td></tr>')
+    
+
+
 
 def ranking() :
     sort_df = daily_all_df.copy()
