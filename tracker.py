@@ -8,18 +8,18 @@ import datetime
 import pandas as pd
 import locale
 import shutil
-import math
+#import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.23"       # 24/03/05
+version = "0.24"       # 24/03/06
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 dataname = "/CSVFile.csv"
 datafile = ""
-backfile = appdir + "/save.csv"
+backfile = appdir + "/save.txt"
 datadir = appdir
 templatefile = appdir + "/tracker_templ.htm"
 resultfile = appdir + "/tracker.htm"
@@ -206,54 +206,32 @@ def daily_table() :
 #  サマリ
 def cur_mon_info() :
     df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
-    #cur_ptime = df_month.iloc[-1,0]
     cur_ptime = df_month.iloc[-1]['ptime']
-    hh = cur_ptime // 60 
-    mm = cur_ptime % 60 
     out.write(f'')
-    out.write(f'<tr><td>今月</td><td>{hh}:{mm:02}</td>')
+    out.write(f'<tr><td>今月</td><td align="right">{cur_ptime//60}:{cur_ptime%60:02}</td>')
     ave = int(cur_ptime/datetime.date.today().day)
-    hh = ave // 60 
-    mm = ave % 60 
-    out.write(f'<td>{hh}:{mm:02}</td><td></td></tr>')
-
-
-    hh = total_30_time // 60 
-    mm = total_30_time % 60 
-    out.write(f'<tr><td>30日</td><td>{hh}:{mm:02}</td> ')
-    ave = int(total_30_time/30)
-    hh = ave // 60 
-    mm = ave % 60 
-    out.write(f'<td>{hh}:{mm:02}</td>')
-
-    sort_df = daily_all_df.copy()
-    sort_df = sort_df.tail(30)
-    sort_df = sort_df.sort_values('ptime',ascending=False)
-    #sort_df.reset_index()
-    #print(sort_df)
-    #max_ptime = sort_df.at[0,'ptime']
-    max_ptime = sort_df['ptime'].iloc[0]
-    #print(max_ptime)
-    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
-    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td></td></tr>')
 
     prev_ptime = df_month.iloc[-2]['ptime']
-    print(prev_ptime)
     today = datetime.datetime.today()
     this_month = datetime.datetime(today.year, today.month, 1)
     last_month_end = this_month - datetime.timedelta(days=1)
     dd = last_month_end.day
-    print(dd)
-    hh = prev_ptime // 60 
-    mm = prev_ptime % 60 
-    out.write(f'<tr><td>先月</td><td>{hh}:{mm:02}</td> ')
+    out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
     ave = int(prev_ptime/dd)
-    hh = ave // 60 
-    mm = ave % 60 
-    out.write(f'<td>{hh}:{mm:02}</td><td></td></tr>')
-    
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td></td></tr>')
 
+    df30 = daily_all_df.copy()
+    df30 = df30.tail(30)
+    ptime30 = df30['ptime'].sum()
+    out.write(f'<tr><td>30日</td><td>{ptime30//60}:{ptime30%60:02}</td> ')
+    ave = int(ptime30/30)
+    out.write(f'<td>{ave//60}:{ave%60:02}</td>')
 
+    sort_df = df30.sort_values('ptime',ascending=False)
+    max_ptime = sort_df['ptime'].iloc[0]
+    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
+    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
 def ranking() :
     sort_df = daily_all_df.copy()
