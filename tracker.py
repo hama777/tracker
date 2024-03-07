@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.24"       # 24/03/06
+version = "0.25"       # 24/03/07
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -205,12 +205,23 @@ def daily_table() :
 
 #  サマリ
 def cur_mon_info() :
+    df_tmp = daily_all_df[daily_all_df['date'] > datetime.datetime(2024,3,1)]
+    df_tmp = df_tmp.reset_index()
+    cur_max = df_tmp['ptime'].max()
+    cur_maxix = df_tmp['ptime'].idxmax()
+    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
     df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
     cur_ptime = df_month.iloc[-1]['ptime']
     out.write(f'')
     out.write(f'<tr><td>今月</td><td align="right">{cur_ptime//60}:{cur_ptime%60:02}</td>')
     ave = int(cur_ptime/datetime.date.today().day)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td></td></tr>')
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
+
+    df_tmp = daily_all_df[(daily_all_df['date'] > datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
+    df_tmp = df_tmp.reset_index()
+    cur_max = df_tmp['ptime'].max()
+    cur_maxix = df_tmp['ptime'].idxmax()
+    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
 
     prev_ptime = df_month.iloc[-2]['ptime']
     today = datetime.datetime.today()
@@ -219,7 +230,7 @@ def cur_mon_info() :
     dd = last_month_end.day
     out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
     ave = int(prev_ptime/dd)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td></td></tr>')
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
 
     df30 = daily_all_df.copy()
     df30 = df30.tail(30)
