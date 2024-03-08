@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.25"       # 24/03/07
+version = "0.26"       # 24/03/08
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,25 +37,27 @@ end_year = 2024  #  データが存在する最終年
 lastdate = ""    #  最終データ日付
 lasthh = 0       #  何時までのデータか
 df = ""
-total_mm_time = 0  # 今月の総時間
-total_30_time = 0  # 過去30日の総時間
+#total_mm_time = 0  # 今月の総時間
+#total_30_time = 0  # 過去30日の総時間
 
 last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
 daily_df = ""    #  日ごとのデータ df
 daily_all_df = ""    #  日ごとのデータ df
+today_date = ""   # 今日の日付  date型
 
 def main_proc():
-    global  datafile,logf
+    global  datafile,logf,today_date
     locale.setlocale(locale.LC_TIME, '')
     logf = open(logfile,'a',encoding='utf-8')
     logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    
+    today_date = datetime.datetime.today()
     read_config()
 
     read_data()
-    totalling_daily_data()
+    #totalling_daily_data()
     totalling_daily_data2()
+    #month_info()    #  開発中
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -205,7 +207,7 @@ def daily_table() :
 
 #  サマリ
 def cur_mon_info() :
-    df_tmp = daily_all_df[daily_all_df['date'] > datetime.datetime(2024,3,1)]
+    df_tmp = daily_all_df[daily_all_df['date'] >= datetime.datetime(2024,3,1)]
     df_tmp = df_tmp.reset_index()
     cur_max = df_tmp['ptime'].max()
     cur_maxix = df_tmp['ptime'].idxmax()
@@ -217,19 +219,19 @@ def cur_mon_info() :
     ave = int(cur_ptime/datetime.date.today().day)
     out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
 
-    df_tmp = daily_all_df[(daily_all_df['date'] > datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
+    df_tmp = daily_all_df[(daily_all_df['date'] >= datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
     df_tmp = df_tmp.reset_index()
     cur_max = df_tmp['ptime'].max()
     cur_maxix = df_tmp['ptime'].idxmax()
     mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
 
     prev_ptime = df_month.iloc[-2]['ptime']
-    today = datetime.datetime.today()
-    this_month = datetime.datetime(today.year, today.month, 1)
-    last_month_end = this_month - datetime.timedelta(days=1)
-    dd = last_month_end.day
+    # today = datetime.datetime.today()
+    # this_month = datetime.datetime(today.year, today.month, 1)
+    # last_month_end = this_month - datetime.timedelta(days=1)
+    # dd = last_month_end.day
     out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
-    ave = int(prev_ptime/dd)
+    ave = int(prev_ptime/last_month_days())
     out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
 
     df30 = daily_all_df.copy()
@@ -243,6 +245,24 @@ def cur_mon_info() :
     max_ptime = sort_df['ptime'].iloc[0]
     max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
     out.write(f'<td>{max_ptime}({max_date})</td></tr>')
+
+#   前月の日数
+def last_month_days() :
+    this_month = datetime.datetime(today_date.year, today_date.month, 1)
+    last_month_end = this_month - datetime.timedelta(days=1)
+    return(last_month_end.day)
+
+#   月別情報
+def month_info()  :
+    #  年月  合計時間  1日平均時間  最大時間   無練習日率
+    curmm = 2
+    endmm = today_date.month
+    start = datetime.datetime(2024, curmm, 1)
+    curmm += 1 
+    end = datetime.datetime(2024, curmm, 1)
+    df_mm = daily_all_df[(daily_all_df['date'] >= start) & (daily_all_df['date'] < end )]
+    print(df_mm)
+    pass
 
 def ranking() :
     sort_df = daily_all_df.copy()
@@ -266,7 +286,7 @@ def ftp_upload() :
         ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
 
 def today(s):
-    d = datetime.datetime.today().strftime("%m/%d %H:%M")
+    d = today_date.strftime("%m/%d %H:%M")
     s = s.replace("%today%",d)
     out.write(s)
 
