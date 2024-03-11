@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.26"       # 24/03/08
+version = "0.27"       # 24/03/11
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,8 +37,6 @@ end_year = 2024  #  データが存在する最終年
 lastdate = ""    #  最終データ日付
 lasthh = 0       #  何時までのデータか
 df = ""
-#total_mm_time = 0  # 今月の総時間
-#total_30_time = 0  # 過去30日の総時間
 
 last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
@@ -57,7 +55,6 @@ def main_proc():
     read_data()
     #totalling_daily_data()
     totalling_daily_data2()
-    #month_info()    #  開発中
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -255,14 +252,19 @@ def last_month_days() :
 #   月別情報
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
-    curmm = 2
+    #  暫定    年は考慮していない
+    curmm = 1
     endmm = today_date.month
-    start = datetime.datetime(2024, curmm, 1)
-    curmm += 1 
-    end = datetime.datetime(2024, curmm, 1)
-    df_mm = daily_all_df[(daily_all_df['date'] >= start) & (daily_all_df['date'] < end )]
-    print(df_mm)
-    pass
+    while curmm <= endmm :
+        start = datetime.datetime(2024, curmm, 1)
+        end = datetime.datetime(2024, curmm+1, 1)
+        df_mm = daily_all_df[(daily_all_df['date'] >= start) & (daily_all_df['date'] < end )]
+        p_sum = df_mm['ptime'].sum()
+        p_ave = df_mm['ptime'].mean()
+        p_max = df_mm['ptime'].max()
+        out.write(f'<tr><td align="right">{curmm}</td><td align="right">{p_sum}</td>'
+                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max}</td><td></td></tr>\n')
+        curmm += 1 
 
 def ranking() :
     sort_df = daily_all_df.copy()
@@ -311,6 +313,9 @@ def parse_template() :
             continue
         if "%daily_movav%" in line :
             daily_movav()
+            continue
+        if "%month_info%" in line :
+            month_info()
             continue
         if "%ranking%" in line :
             ranking()
