@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.27"       # 24/03/11
+version = "0.28"       # 24/03/12
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -262,8 +262,8 @@ def month_info()  :
         p_sum = df_mm['ptime'].sum()
         p_ave = df_mm['ptime'].mean()
         p_max = df_mm['ptime'].max()
-        out.write(f'<tr><td align="right">{curmm}</td><td align="right">{p_sum}</td>'
-                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max}</td><td></td></tr>\n')
+        out.write(f'<tr><td align="right">{curmm}</td><td align="right">{p_sum//60}:{p_sum%60:02}</td>'
+                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max//60}:{p_max%60:02}</td><td></td></tr>\n')
         curmm += 1 
 
 def ranking() :
