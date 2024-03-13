@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/03/11 -->
+    <!-- 24/03/12 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -43,8 +43,12 @@
                     title: '日別時間7日移動平均',
                     colors: ['green'] ,
                     hAxis: {title: '日'},
-                    chartArea: { backgroundColor: '#f1f7f9' },
-                    backgroundColor: '#f1f8e9'
+                    chartArea: { backgroundColor: '#f1f7f9' , left:30,right:30 },
+                    backgroundColor: '#f1f8e9',
+                    curveType: 'function',
+                    legend: {
+                        position: 'none'
+                    }
                 };
         
                 var chart = new google.visualization.LineChart(document.getElementById('daily_movav'));
@@ -72,7 +76,7 @@
 
         <h2>月別データ</h2>
         <table>
-            <tr><th>月</th><th>合計時間</th><th>平均時間</th><th>最大</th><th>無練習率</th></tr>
+            <tr><th>月</th><th>合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習率</th></tr>
             %month_info% 
         </table>
 
