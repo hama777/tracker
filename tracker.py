@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.28"       # 24/03/12
+version = "0.29"       # 24/03/15
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,8 +53,7 @@ def main_proc():
     read_config()
 
     read_data()
-    #totalling_daily_data()
-    totalling_daily_data2()
+    totalling_daily_data()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -106,7 +105,7 @@ def post_process_datafile() :
 
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  daily_all_df を作成する
 #   daily_all_df は ptime が 0 の日(データ)も含む
-def totalling_daily_data2() :
+def totalling_daily_data() :
     global daily_all_df
 
     df_daily  = df.resample('D')['ptime'].sum()
@@ -130,45 +129,7 @@ def totalling_daily_data2() :
     daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
     daily_all_df['date'] = pd.to_datetime(daily_all_df["date"])
 
-#   過去30日間の1日ごとの練習時間を集計する
-def totalling_daily_data() :
-    global daily_data,total_mm_time,total_30_time,daily_df
-
-    df_daily  = df.resample('D')['ptime'].sum()
-    date_list = []
-    ptime_list = []
-    today_dd = datetime.date.today()
-    cur_month = today_dd.month   #  今月
-    start_date = today_dd - datetime.timedelta(days=30)
-
-    while start_date  < today_dd:
-        str_date = start_date.strftime("%Y-%m-%d")
-        try:
-            ptime = df_daily.loc[str_date]
-        except KeyError:
-            ptime = 0 
-        mm = start_date.month
-        dd = start_date.day
-        item_list = []
-        date_str = f'{dd:02}'
-        #date_str = f'{mm:02}/{dd:02}'
-        #item_list.append(date_str)
-        #item_list.append(ptime)
-        #daily_data.append(item_list)
-        if cur_month == mm :   #  今月のデータ
-            total_mm_time += ptime
-        total_30_time += ptime
-
-        if ptime != 0 :
-            date_list.append(start_date)
-            ptime_list.append(ptime)
-
-        start_date +=  datetime.timedelta(days=1)
-
-    #  1日ごとデータのdfを作成する
-    #daily_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-
-    #  7日間の移動平均
+#  7日間の移動平均
 def daily_movav() :
     mov_ave_dd = 7
     df_movav  =  daily_all_df.copy()
