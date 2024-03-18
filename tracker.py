@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.29"       # 24/03/15
+version = "0.30"       # 24/03/18
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,11 +45,13 @@ daily_all_df = ""    #  日ごとのデータ df
 today_date = ""   # 今日の日付  date型
 
 def main_proc():
-    global  datafile,logf,today_date
+    global  datafile,logf,today_date,today_mm,today_dd
     locale.setlocale(locale.LC_TIME, '')
     logf = open(logfile,'a',encoding='utf-8')
     logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     today_date = datetime.datetime.today()
+    today_mm = today_date.month
+    today_dd = today_date.day
     read_config()
 
     read_data()
@@ -223,8 +225,14 @@ def month_info()  :
         p_sum = df_mm['ptime'].sum()
         p_ave = df_mm['ptime'].mean()
         p_max = df_mm['ptime'].max()
+        df_ptime_zero = (df_mm['ptime'] == 0) 
+        if curmm == today_mm :
+            td = today_dd -1 
+        else :
+            td = (end - start).days
         out.write(f'<tr><td align="right">{curmm}</td><td align="right">{p_sum//60}:{p_sum%60:02}</td>'
-                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max//60}:{p_max%60:02}</td><td></td></tr>\n')
+                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max//60}:{p_max%60:02}</td>'
+                  f'<td align="right">{df_ptime_zero.sum()/td * 100:5.2f}</td></tr>\n')
         curmm += 1 
 
 def ranking() :
