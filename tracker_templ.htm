@@ -21,8 +21,11 @@
                     colors: ['green'] ,
                     vAxis: {minValue:0,ticks:[0,30,60,90,120]},
                     hAxis: {title: '日付'},
-                    chartArea: { backgroundColor: '#f1f7f9' },
-                    backgroundColor: '#f1f8e9'
+                    chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
+                    backgroundColor: '#f1f8e9' ,
+                    legend: {
+                        position: 'none'
+                    }
                 };
         
                 var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph'));
@@ -43,7 +46,7 @@
                     title: '日別時間7日移動平均',
                     colors: ['green'] ,
                     hAxis: {title: '日'},
-                    chartArea: { backgroundColor: '#f1f7f9' , left:30,right:30 },
+                    chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
                     backgroundColor: '#f1f8e9',
                     curveType: 'function',
                     legend: {
@@ -63,22 +66,18 @@
         <span style="font-size:12px;">実行日時   : %today%</span>
         <span style="font-size:12px;">最終データ : %lastdate%</span>
 
-        <h2>サマリ</h2>
-        <table>
-            <tr><th>項目</th><th>合計</th><th>平均</th><th>最大</th></tr>
-            %cur_mon_info% 
-        </table>
-        <h2>今月のデータ</h2>
-        <div id="daily_graph" style="width:1000px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
-
-        <h2>移動平均グラフ</h2>
-        <div id="daily_movav" style="width:1000px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
-
         <h2>月別データ</h2>
         <table>
-            <tr><th>月</th><th>合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習率</th></tr>
+            <tr><th>月</th><th>合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習日</th><th>無練習率</th></tr>
             %month_info% 
         </table>
+
+        <h2>日別グラフ</h2>
+        <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
+        <h2>移動平均グラフ</h2>
+        <div id="daily_movav" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
 
         <h2>練習時間ランキング</h2>
         <table class="rank">
