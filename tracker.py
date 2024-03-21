@@ -13,7 +13,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import numpy as np
 
-version = "0.31"       # 24/03/19
+version = "0.32"       # 24/03/21
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,16 +42,18 @@ last_dd = 0
 daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
 daily_df = ""    #  日ごとのデータ df
 daily_all_df = ""    #  日ごとのデータ df
-today_date = ""   # 今日の日付  date型
+today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
-    global  datafile,logf,today_date,today_mm,today_dd
+    global  datafile,logf,today_date,today_mm,today_dd,yesterday
     locale.setlocale(locale.LC_TIME, '')
     logf = open(logfile,'a',encoding='utf-8')
     logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     today_date = datetime.datetime.today()
+    #today_date = datetime.date.today()
     today_mm = today_date.month
     today_dd = today_date.day
+    yesterday = today_date - timedelta(days=1)
     read_config()
 
     read_data()
@@ -244,6 +246,9 @@ def ranking() :
     for _ , row in sort_df.iterrows() :
         i += 1 
         date_str = row['date'].strftime('%m/%d (%a)')
+        print(row['date'],yesterday)
+        if row['date'].date() == yesterday.date() :
+            date_str = f'<span class=red>{date_str}</span>'
         hh = row['ptime'] // 60
         mm = row['ptime'] % 60
         time_str = f'{hh:02}:{mm:02}'
