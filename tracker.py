@@ -8,12 +8,10 @@ import datetime
 import pandas as pd
 import locale
 import shutil
-#import math
 from ftplib import FTP_TLS
 from datetime import date,timedelta
-import numpy as np
 
-version = "0.32"       # 24/03/21
+version = "1.00"       # 24/03/22
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,17 +43,13 @@ daily_all_df = ""    #  日ごとのデータ df
 today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
-    global  datafile,logf,today_date,today_mm,today_dd,yesterday
+    global  datafile,logf
+
     locale.setlocale(locale.LC_TIME, '')
     logf = open(logfile,'a',encoding='utf-8')
     logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    today_date = datetime.datetime.today()
-    #today_date = datetime.date.today()
-    today_mm = today_date.month
-    today_dd = today_date.day
-    yesterday = today_date - timedelta(days=1)
+    date_settings()
     read_config()
-
     read_data()
     totalling_daily_data()
     parse_template()
@@ -93,6 +87,14 @@ def read_data():
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
+
+def date_settings():
+    global  today_date,today_mm,today_dd,yesterday,today_datetime
+    today_datetime = datetime.datetime.today()
+    today_date = datetime.date.today()
+    today_mm = today_date.month
+    today_dd = today_date.day
+    yesterday = today_date - timedelta(days=1)
 
 def post_process_datafile() :
     if debug == 1 :
@@ -246,8 +248,7 @@ def ranking() :
     for _ , row in sort_df.iterrows() :
         i += 1 
         date_str = row['date'].strftime('%m/%d (%a)')
-        print(row['date'],yesterday)
-        if row['date'].date() == yesterday.date() :
+        if row['date'].date() == yesterday :   # row['date'] はdatetime型なのでdate()で日付部分のみ
             date_str = f'<span class=red>{date_str}</span>'
         hh = row['ptime'] // 60
         mm = row['ptime'] % 60
@@ -264,13 +265,8 @@ def ftp_upload() :
         ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
 
 def today(s):
-    d = today_date.strftime("%m/%d %H:%M")
+    d = today_datetime.strftime("%m/%d %H:%M")
     s = s.replace("%today%",d)
-    out.write(s)
-
-def curdate(s) :
-    d = f'{lastdate} {lasthh}時'
-    s = s.replace("%lastdate%",d)
     out.write(s)
 
 def parse_template() :
@@ -295,9 +291,6 @@ def parse_template() :
             continue
         if "%ranking%" in line :
             ranking()
-            continue
-        if "%lastdate%" in line :
-            curdate(line)
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
