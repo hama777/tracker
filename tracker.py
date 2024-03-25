@@ -11,7 +11,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.00"       # 24/03/22
+version = "1.01"       # 24/03/25
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,6 +23,8 @@ templatefile = appdir + "/tracker_templ.htm"
 resultfile = appdir + "/tracker.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\tracker.log"
+pastdata = appdir + "/pastdata.txt"
+past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
 df = ""
@@ -37,7 +39,7 @@ lasthh = 0       #  何時までのデータか
 df = ""
 
 last_dd = 0
-daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
+#daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
 daily_df = ""    #  日ごとのデータ df
 daily_all_df = ""    #  日ごとのデータ df
 today_date = ""   # 今日の日付  datetime型
@@ -51,6 +53,7 @@ def main_proc():
     date_settings()
     read_config()
     read_data()
+    #read_pastdata()
     totalling_daily_data()
     parse_template()
     ftp_upload()
@@ -80,8 +83,9 @@ def read_data():
             if row[0] == "ピアノ" :
                 date_list.append(row[1])
                 tt = row[3].replace("'","")
-                hh,mm = tt.split(":")
-                tt  = int(hh) * 60 + int(mm)
+                tt = conv_hhmm_mm(tt) 
+                #hh,mm = tt.split(":")
+                #tt  = int(hh) * 60 + int(mm)
                 process_list.append(tt)
 
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
@@ -95,6 +99,42 @@ def date_settings():
     today_mm = today_date.month
     today_dd = today_date.day
     yesterday = today_date - timedelta(days=1)
+
+def read_pastdata():
+    yymmpf_list = []
+    pf_list = []
+    f = open(pastdata,'r', encoding='utf-8')
+    for line in f :
+        line = line.strip()
+        n = line.split("\t")
+        if len(n) == 2 :
+            dateyymm,vn = line.split("\t")
+            pf = ""
+        else :
+            dateyymm,vn,pf = line.split("\t")
+        vn = conv_hhmm_mm(vn)
+        pf = conv_hhmm_mm(pf)
+        yymm = conv_yymm(dateyymm)
+        if yymm >= 2001 :     # pf は 20年1月から
+            yymmpf_list.append(yymm)
+            pf_list.append(pf)
+
+    f.close()
+    df_past_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
+    print(df_past_pf)
+
+def conv_hhmm_mm(hhmm) :
+    if hhmm == "" :
+        return 0
+    hh,mm = hhmm.split(":")
+    return int(hh) * 60 + int(mm)
+
+#   yy/mm 形式の文字列を入力し int型の yymm を返す
+def conv_yymm(yymm) :
+    yy,mm = yymm.split("/")
+    return int(yy) * 100 + int(mm)
+    
+
 
 def post_process_datafile() :
     if debug == 1 :
