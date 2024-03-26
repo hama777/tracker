@@ -11,7 +11,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.01"       # 24/03/25
+version = "1.02"       # 24/03/26
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,9 +53,11 @@ def main_proc():
     date_settings()
     read_config()
     read_data()
-    #read_pastdata()
+    read_pastdata()
+    
     totalling_daily_data()
     parse_template()
+    month_graph()
     ftp_upload()
     post_process_datafile()
     #daily_graph()
@@ -101,6 +103,7 @@ def date_settings():
     yesterday = today_date - timedelta(days=1)
 
 def read_pastdata():
+    global df_past_pf
     yymmpf_list = []
     pf_list = []
     f = open(pastdata,'r', encoding='utf-8')
@@ -121,7 +124,7 @@ def read_pastdata():
 
     f.close()
     df_past_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
-    print(df_past_pf)
+    #print(df_past_pf)
 
 def conv_hhmm_mm(hhmm) :
     if hhmm == "" :
@@ -134,7 +137,10 @@ def conv_yymm(yymm) :
     yy,mm = yymm.split("/")
     return int(yy) * 100 + int(mm)
     
-
+def month_graph() :
+    for _ , row in df_past_pf.iterrows() :
+        yymm = int(row['yymm'])
+        print(row['yymm'],row['ptime'])
 
 def post_process_datafile() :
     if debug == 1 :
@@ -260,6 +266,7 @@ def last_month_days() :
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
     #  暫定    年は考慮していない
+    global df_past_pf
     curmm = 1
     endmm = today_date.month
     while curmm <= endmm :
@@ -279,7 +286,14 @@ def month_info()  :
                   f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max//60}:{p_max%60:02}</td>'
                   f'<td align="right">{ptime_zero}</td>'
                   f'<td align="right">{ptime_zero/td * 100:5.2f}</td></tr>\n')
+        yymm = 24 * 100 + curmm
+        df_tmp = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
+        df_past_pf = pd.concat([df_past_pf, df_tmp])
         curmm += 1 
+
+    df_past_pf = df_past_pf.reset_index(drop=True)
+    #print(df_past_pf)
+
 
 def ranking() :
     sort_df = daily_all_df.copy()
