@@ -11,7 +11,7 @@ import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.02"       # 24/03/26
+version = "1.03"       # 24/03/27
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -57,7 +57,6 @@ def main_proc():
     
     totalling_daily_data()
     parse_template()
-    month_graph()
     ftp_upload()
     post_process_datafile()
     #daily_graph()
@@ -137,11 +136,6 @@ def conv_yymm(yymm) :
     yy,mm = yymm.split("/")
     return int(yy) * 100 + int(mm)
     
-def month_graph() :
-    for _ , row in df_past_pf.iterrows() :
-        yymm = int(row['yymm'])
-        print(row['yymm'],row['ptime'])
-
 def post_process_datafile() :
     if debug == 1 :
         return 
@@ -294,6 +288,12 @@ def month_info()  :
     df_past_pf = df_past_pf.reset_index(drop=True)
     #print(df_past_pf)
 
+#   月ごとの時間グラフ
+#   month_info で df_past_pf を更新しているため month_info より後に実行する必要がある
+def month_graph() :
+    for _ , row in df_past_pf.iterrows() :
+        yymm = int(row['yymm'])
+        out.write(f"['{row['yymm']}',{row['ptime']}],")
 
 def ranking() :
     sort_df = daily_all_df.copy()
@@ -345,6 +345,9 @@ def parse_template() :
             continue
         if "%ranking%" in line :
             ranking()
+            continue
+        if "%month_graph%" in line :
+            month_graph()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
