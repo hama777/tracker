@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/03/22 -->
+    <!-- 24/03/27 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="tracker.css">
     </head>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
     <script type="text/javascript">
         google.load("visualization", "1", {packages:["corechart"]});
         google.setOnLoadCallback(
@@ -60,6 +61,33 @@
         );
     </script>
 
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
+    %month_graph%
+                ]);
+        
+                var options = {
+                    title: '月別時間',
+                    colors: ['green'] ,
+                    vAxis: {minValue:0},
+                    hAxis: {title: '年月'},
+                    chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
+                    backgroundColor: '#f1f8e9' ,
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.ColumnChart(document.getElementById('month_graph'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+
     <body>
         <h1>Tracker List</h1>
         <span style="font-size:12px;">Ver : %version%</span>
@@ -77,12 +105,14 @@
         <h2>移動平均グラフ</h2>
         <div id="daily_movav" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
-
         <h2>練習時間ランキング</h2>
         <table class="rank">
             <tr><th>順位</th><th>時間</th><th>日付</th></tr>
             %ranking%
         </table>
+
+        <h2>月別グラフ</h2>
+        <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <!-- <table>
             <tr>
