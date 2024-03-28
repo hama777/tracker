@@ -10,8 +10,9 @@ import locale
 import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
+import calendar
 
-version = "1.03"       # 24/03/27
+version = "1.04"       # 24/03/28
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -209,46 +210,6 @@ def daily_table() :
         out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
     #print(last_dd)    
 
-#  サマリ
-def cur_mon_info() :
-    df_tmp = daily_all_df[daily_all_df['date'] >= datetime.datetime(2024,3,1)]
-    df_tmp = df_tmp.reset_index()
-    cur_max = df_tmp['ptime'].max()
-    cur_maxix = df_tmp['ptime'].idxmax()
-    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
-    df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
-    cur_ptime = df_month.iloc[-1]['ptime']
-    out.write(f'')
-    out.write(f'<tr><td>今月</td><td align="right">{cur_ptime//60}:{cur_ptime%60:02}</td>')
-    ave = int(cur_ptime/datetime.date.today().day)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
-
-    df_tmp = daily_all_df[(daily_all_df['date'] >= datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
-    df_tmp = df_tmp.reset_index()
-    cur_max = df_tmp['ptime'].max()
-    cur_maxix = df_tmp['ptime'].idxmax()
-    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
-
-    prev_ptime = df_month.iloc[-2]['ptime']
-    # today = datetime.datetime.today()
-    # this_month = datetime.datetime(today.year, today.month, 1)
-    # last_month_end = this_month - datetime.timedelta(days=1)
-    # dd = last_month_end.day
-    out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
-    ave = int(prev_ptime/last_month_days())
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
-
-    df30 = daily_all_df.copy()
-    df30 = df30.tail(30)
-    ptime30 = df30['ptime'].sum()
-    out.write(f'<tr><td>30日</td><td>{ptime30//60}:{ptime30%60:02}</td> ')
-    ave = int(ptime30/30)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td>')
-
-    sort_df = df30.sort_values('ptime',ascending=False)
-    max_ptime = sort_df['ptime'].iloc[0]
-    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
-    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
 #   前月の日数
 def last_month_days() :
@@ -293,7 +254,11 @@ def month_info()  :
 def month_graph() :
     for _ , row in df_past_pf.iterrows() :
         yymm = int(row['yymm'])
-        out.write(f"['{row['yymm']}',{row['ptime']}],")
+        yy = int(yymm / 100) + 2000
+        mm = yymm % 100
+        n = calendar.monthrange(yy, mm)[1]   # 月の日数
+        r = int(row['ptime']) / n 
+        out.write(f"['{row['yymm']}',{r}],")
 
 def ranking() :
     sort_df = daily_all_df.copy()
@@ -378,6 +343,47 @@ def read_config() :
     pixela_token = conf.readline().strip()
     debug = int(conf.readline().strip())
     conf.close()
+
+#  サマリ
+def cur_mon_info() :
+    df_tmp = daily_all_df[daily_all_df['date'] >= datetime.datetime(2024,3,1)]
+    df_tmp = df_tmp.reset_index()
+    cur_max = df_tmp['ptime'].max()
+    cur_maxix = df_tmp['ptime'].idxmax()
+    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
+    df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
+    cur_ptime = df_month.iloc[-1]['ptime']
+    out.write(f'')
+    out.write(f'<tr><td>今月</td><td align="right">{cur_ptime//60}:{cur_ptime%60:02}</td>')
+    ave = int(cur_ptime/datetime.date.today().day)
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
+
+    df_tmp = daily_all_df[(daily_all_df['date'] >= datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
+    df_tmp = df_tmp.reset_index()
+    cur_max = df_tmp['ptime'].max()
+    cur_maxix = df_tmp['ptime'].idxmax()
+    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
+
+    prev_ptime = df_month.iloc[-2]['ptime']
+    # today = datetime.datetime.today()
+    # this_month = datetime.datetime(today.year, today.month, 1)
+    # last_month_end = this_month - datetime.timedelta(days=1)
+    # dd = last_month_end.day
+    out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
+    ave = int(prev_ptime/last_month_days())
+    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
+
+    df30 = daily_all_df.copy()
+    df30 = df30.tail(30)
+    ptime30 = df30['ptime'].sum()
+    out.write(f'<tr><td>30日</td><td>{ptime30//60}:{ptime30%60:02}</td> ')
+    ave = int(ptime30/30)
+    out.write(f'<td>{ave//60}:{ave%60:02}</td>')
+
+    sort_df = df30.sort_values('ptime',ascending=False)
+    max_ptime = sort_df['ptime'].iloc[0]
+    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
+    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
 
 # ----------------------------------------------------------
