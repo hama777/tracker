@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "1.04"       # 24/03/28
+version = "1.05"       # 24/03/29
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,6 +25,7 @@ resultfile = appdir + "/tracker.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\tracker.log"
 pastdata = appdir + "/pastdata.txt"
+pf_ptime_csv = appdir + "/pfdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
@@ -57,6 +58,7 @@ def main_proc():
     read_pastdata()
     
     totalling_daily_data()
+    output_ptime_to_csv()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -69,7 +71,9 @@ def read_data():
 
     datafile = datadir + dataname
     date_list = []
+    date_list_vn = []
     process_list = []
+    process_list_vn = []
     if debug == 1 :
         if not os.path.isfile(datafile) :
             datafile = backfile
@@ -86,13 +90,21 @@ def read_data():
                 date_list.append(row[1])
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
-                #hh,mm = tt.split(":")
-                #tt  = int(hh) * 60 + int(mm)
                 process_list.append(tt)
+            if row[0] == "バイオリン" :
+                date_list_vn.append(row[1])
+                tt = row[3].replace("'","")
+                tt = conv_hhmm_mm(tt) 
+                process_list_vn.append(tt)
 
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
+
+    df_vn = pd.DataFrame(list(zip(date_list_vn,process_list_vn)), columns = ['date','ptime'])
+    df_vn["date"] = pd.to_datetime(df_vn["date"])
+    df_vn = df_vn.set_index("date")
+    #print(df_vn)
 
 def date_settings():
     global  today_date,today_mm,today_dd,yesterday,today_datetime
@@ -172,11 +184,21 @@ def totalling_daily_data() :
         ptime_list.append(ptime)
         target_date +=  datetime.timedelta(days=1)
 
-
     daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
     daily_all_df['date'] = pd.to_datetime(daily_all_df["date"])
+    #print(daily_all_df)
+
+#   pf_ptime_csv ファイルに yy/mm/dd,ptime の形式で全データを出力する
+#   バックアップ用途
+def output_ptime_to_csv():
+    f = open(pf_ptime_csv,'w',encoding='utf-8')
+    for _ , row in daily_all_df.iterrows() :    
+        date_str = row['date'].strftime("%Y/%m/%d")
+        f.write(f"{date_str},{row['ptime']}\n")
+    f.close()
 
 #  7日間の移動平均
+#  TODO:  30日間等期限つきにする
 def daily_movav() :
     mov_ave_dd = 7
     df_movav  =  daily_all_df.copy()
@@ -220,7 +242,7 @@ def last_month_days() :
 #   月別情報
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
-    #  暫定    年は考慮していない
+    #  TODO: 年は考慮していない
     global df_past_pf
     curmm = 1
     endmm = today_date.month
@@ -260,6 +282,8 @@ def month_graph() :
         r = int(row['ptime']) / n 
         out.write(f"['{row['yymm']}',{r}],")
 
+#   ランキング
+#   TODO:  今月のランキング
 def ranking() :
     sort_df = daily_all_df.copy()
     sort_df = sort_df.sort_values('ptime',ascending=False)
@@ -326,7 +350,6 @@ def parse_template() :
     f.close()
     out.close()
 
-
 def read_config() : 
     global ftp_host,ftp_user,ftp_pass,ftp_url,debug,datadir,pixela_url,pixela_token
     if not os.path.isfile(conffile) :
@@ -345,6 +368,7 @@ def read_config() :
     conf.close()
 
 #  サマリ
+#  未使用
 def cur_mon_info() :
     df_tmp = daily_all_df[daily_all_df['date'] >= datetime.datetime(2024,3,1)]
     df_tmp = df_tmp.reset_index()
