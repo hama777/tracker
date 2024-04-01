@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "1.05"       # 24/03/29
+version = "1.06"       # 24/04/01
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -59,6 +59,7 @@ def main_proc():
     
     totalling_daily_data()
     output_ptime_to_csv()
+    create_month_data()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -243,36 +244,53 @@ def last_month_days() :
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
     #  TODO: 年は考慮していない
-    global df_past_pf
+    
+    for item in month_data_list :
+        yymm,sum,ave,max,zero = item
+        yy = int(yymm / 100)
+        mm =  yymm % 100
+        if mm  == today_mm :   #  今月なら 前日まで
+            td = today_dd -1 
+        else :
+            td = calendar.monthrange(yy, mm)[1] 
+
+        out.write(f'<tr><td align="right">{yymm}</td><td align="right">{sum//60}:{sum%60:02}</td>'
+                  f'<td align="right">{ave:5.1f}</td><td align="right">{max//60}:{max%60:02}</td>'
+                  f'<td align="right">{zero}</td>'
+                  f'<td align="right">{zero/td * 100:5.2f}</td></tr>\n')
+    
+# df_past_pf  
+# month_data_list   (yymm,sum,mean,max,zero) のタプルを要素とするリスト
+def create_month_data() :
+    global df_past_pf,month_data_list
+    month_data_list = []
     curmm = 1
     endmm = today_date.month
     while curmm <= endmm :
         start = datetime.datetime(2024, curmm, 1)
         end = datetime.datetime(2024, curmm+1, 1)
         df_mm = daily_all_df[(daily_all_df['date'] >= start) & (daily_all_df['date'] < end )]
+        count  = df_mm['ptime'].count()
+        if count == 0 :    #  データがなければ終了   月初の場合
+            break 
         p_sum = df_mm['ptime'].sum()
         p_ave = df_mm['ptime'].mean()
         p_max = df_mm['ptime'].max()
         df_ptime_zero = (df_mm['ptime'] == 0) 
-        if curmm == today_mm :
-            td = today_dd -1 
-        else :
-            td = (end - start).days
         ptime_zero = df_ptime_zero.sum()
-        out.write(f'<tr><td align="right">{curmm}</td><td align="right">{p_sum//60}:{p_sum%60:02}</td>'
-                  f'<td align="right">{p_ave:5.1f}</td><td align="right">{p_max//60}:{p_max%60:02}</td>'
-                  f'<td align="right">{ptime_zero}</td>'
-                  f'<td align="right">{ptime_zero/td * 100:5.2f}</td></tr>\n')
+        
         yymm = 24 * 100 + curmm
+        tp = (yymm,p_sum,p_ave,p_max,ptime_zero)
+        month_data_list.append(tp)
+
         df_tmp = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
         df_past_pf = pd.concat([df_past_pf, df_tmp])
         curmm += 1 
 
     df_past_pf = df_past_pf.reset_index(drop=True)
-    #print(df_past_pf)
+    print(month_data_list)
 
 #   月ごとの時間グラフ
-#   month_info で df_past_pf を更新しているため month_info より後に実行する必要がある
 def month_graph() :
     for _ , row in df_past_pf.iterrows() :
         yymm = int(row['yymm'])
