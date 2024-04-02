@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "1.06"       # 24/04/01
+version = "1.07"       # 24/04/02
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +29,7 @@ pf_ptime_csv = appdir + "/pfdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
-df = ""
+df_pf = ""
 out = ""
 logf = ""
 pixela_url = ""
@@ -40,10 +40,11 @@ lastdate = ""    #  最終データ日付
 lasthh = 0       #  何時までのデータか
 df = ""
 
+month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 last_dd = 0
 #daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
 daily_df = ""    #  日ごとのデータ df
-daily_all_df = ""    #  日ごとのデータ df
+df_dd_pf = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
@@ -68,7 +69,7 @@ def main_proc():
     logf.close()
 
 def read_data():
-    global df,datafile
+    global df_pf,df_vn,datafile
 
     datafile = datadir + dataname
     date_list = []
@@ -98,9 +99,9 @@ def read_data():
                 tt = conv_hhmm_mm(tt) 
                 process_list_vn.append(tt)
 
-    df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
-    df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date")
+    df_pf = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
+    df_pf["date"] = pd.to_datetime(df_pf["date"])
+    df_pf = df_pf.set_index("date")
 
     df_vn = pd.DataFrame(list(zip(date_list_vn,process_list_vn)), columns = ['date','ptime'])
     df_vn["date"] = pd.to_datetime(df_vn["date"])
@@ -163,14 +164,16 @@ def post_process_datafile() :
     if os.path.isfile(file) :
         os.remove(file)
 
-#   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  daily_all_df を作成する
-#   daily_all_df は ptime が 0 の日(データ)も含む
+#   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd_pf を作成する
+#   df_dd_pf は ptime が 0 の日(データ)も含む
 def totalling_daily_data() :
-    global daily_all_df
+    global df_dd_pf,df_dd_vn
 
-    df_daily  = df.resample('D')['ptime'].sum()
+    df_pf_tmp  = df_pf.resample('D')['ptime'].sum()
+    df_vn_tmp  = df_vn.resample('D')['ptime'].sum()
     date_list = []
     ptime_list = []
+    ptime_list_vn = []
     start_date  = datetime.date(2024, 1, 1)
     target_date = start_date
     end_date = datetime.date.today()
@@ -178,22 +181,29 @@ def totalling_daily_data() :
     while target_date  < end_date:
         str_date = target_date.strftime("%Y-%m-%d")
         try:
-            ptime = df_daily.loc[str_date]
+            ptime = df_pf_tmp.loc[str_date]
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
+        try:
+            ptime_vn = df_vn_tmp.loc[str_date]
+        except KeyError:          #  日付のデータがなければ ptime は 0
+            ptime_vn = 0 
         date_list.append(target_date)
         ptime_list.append(ptime)
+        ptime_list_vn.append(ptime_vn)
         target_date +=  datetime.timedelta(days=1)
 
-    daily_all_df = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    daily_all_df['date'] = pd.to_datetime(daily_all_df["date"])
-    #print(daily_all_df)
+    df_dd_pf = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    df_dd_pf['date'] = pd.to_datetime(df_dd_pf["date"])
+
+    df_dd_vn = pd.DataFrame(list(zip(date_list,ptime_list_vn)), columns = ['date','ptime'])
+    df_dd_vn['date'] = pd.to_datetime(df_dd_vn["date"])
 
 #   pf_ptime_csv ファイルに yy/mm/dd,ptime の形式で全データを出力する
 #   バックアップ用途
 def output_ptime_to_csv():
     f = open(pf_ptime_csv,'w',encoding='utf-8')
-    for _ , row in daily_all_df.iterrows() :    
+    for _ , row in df_dd_pf.iterrows() :    
         date_str = row['date'].strftime("%Y/%m/%d")
         f.write(f"{date_str},{row['ptime']}\n")
     f.close()
@@ -202,7 +212,7 @@ def output_ptime_to_csv():
 #  TODO:  30日間等期限つきにする
 def daily_movav() :
     mov_ave_dd = 7
-    df_movav  =  daily_all_df.copy()
+    df_movav  =  df_dd_pf.copy()
     df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
     for _ , row in df_movav.iterrows() :
         ptime = row['ptime']
@@ -214,7 +224,7 @@ def daily_movav() :
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
-    df30 = daily_all_df.tail(30)
+    df30 = df_dd_pf.tail(30)
     for _ , row in df30.iterrows() :
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['ptime']:5.0f}],")
@@ -224,13 +234,13 @@ def daily_table() :
     global last_dd,total_time 
     pass 
 
-    daily  = df.resample('D')['ptime'].sum()
-    total_time = 0 
-    for dt,v in daily.items() :
-        dt_str = dt.strftime('%m/%d')
-        total_time += v
-        last_dd = dt.day
-        out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
+    # daily  = df.resample('D')['ptime'].sum()
+    # total_time = 0 
+    # for dt,v in daily.items() :
+    #     dt_str = dt.strftime('%m/%d')
+    #     total_time += v
+    #     last_dd = dt.day
+    #     out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
     #print(last_dd)    
 
 
@@ -259,24 +269,24 @@ def month_info()  :
                   f'<td align="right">{zero}</td>'
                   f'<td align="right">{zero/td * 100:5.2f}</td></tr>\n')
     
-# df_past_pf  
-# month_data_list   (yymm,sum,mean,max,zero) のタプルを要素とするリスト
+# 月ごとの情報 month_data_list と df_past_pf を作成する
+# month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 def create_month_data() :
     global df_past_pf,month_data_list
-    month_data_list = []
+
     curmm = 1
     endmm = today_date.month
     while curmm <= endmm :
         start = datetime.datetime(2024, curmm, 1)
         end = datetime.datetime(2024, curmm+1, 1)
-        df_mm = daily_all_df[(daily_all_df['date'] >= start) & (daily_all_df['date'] < end )]
+        df_mm = df_dd_pf[(df_dd_pf['date'] >= start) & (df_dd_pf['date'] < end )]
         count  = df_mm['ptime'].count()
         if count == 0 :    #  データがなければ終了   月初の場合
             break 
         p_sum = df_mm['ptime'].sum()
         p_ave = df_mm['ptime'].mean()
         p_max = df_mm['ptime'].max()
-        df_ptime_zero = (df_mm['ptime'] == 0) 
+        df_ptime_zero = (df_mm['ptime'] == 0)   # 時間が0 の日数
         ptime_zero = df_ptime_zero.sum()
         
         yymm = 24 * 100 + curmm
@@ -303,7 +313,7 @@ def month_graph() :
 #   ランキング
 #   TODO:  今月のランキング
 def ranking() :
-    sort_df = daily_all_df.copy()
+    sort_df = df_dd_pf.copy()
     sort_df = sort_df.sort_values('ptime',ascending=False)
     i = 0 
     for _ , row in sort_df.iterrows() :
@@ -385,47 +395,6 @@ def read_config() :
     debug = int(conf.readline().strip())
     conf.close()
 
-#  サマリ
-#  未使用
-def cur_mon_info() :
-    df_tmp = daily_all_df[daily_all_df['date'] >= datetime.datetime(2024,3,1)]
-    df_tmp = df_tmp.reset_index()
-    cur_max = df_tmp['ptime'].max()
-    cur_maxix = df_tmp['ptime'].idxmax()
-    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
-    df_month = daily_all_df.groupby(pd.Grouper(key='date', freq='M')).sum()
-    cur_ptime = df_month.iloc[-1]['ptime']
-    out.write(f'')
-    out.write(f'<tr><td>今月</td><td align="right">{cur_ptime//60}:{cur_ptime%60:02}</td>')
-    ave = int(cur_ptime/datetime.date.today().day)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
-
-    df_tmp = daily_all_df[(daily_all_df['date'] >= datetime.datetime(2024,2,1)) & (daily_all_df['date'] < datetime.datetime(2024,3,1))]
-    df_tmp = df_tmp.reset_index()
-    cur_max = df_tmp['ptime'].max()
-    cur_maxix = df_tmp['ptime'].idxmax()
-    mdate = df_tmp.iloc[cur_maxix]['date'].strftime('%m/%d (%a)')
-
-    prev_ptime = df_month.iloc[-2]['ptime']
-    # today = datetime.datetime.today()
-    # this_month = datetime.datetime(today.year, today.month, 1)
-    # last_month_end = this_month - datetime.timedelta(days=1)
-    # dd = last_month_end.day
-    out.write(f'<tr><td>先月</td><td align="right">{prev_ptime//60}:{prev_ptime%60:02}</td> ')
-    ave = int(prev_ptime/last_month_days())
-    out.write(f'<td>{ave//60}:{ave%60:02}</td><td>{cur_max}({mdate})</td></tr>')
-
-    df30 = daily_all_df.copy()
-    df30 = df30.tail(30)
-    ptime30 = df30['ptime'].sum()
-    out.write(f'<tr><td>30日</td><td>{ptime30//60}:{ptime30%60:02}</td> ')
-    ave = int(ptime30/30)
-    out.write(f'<td>{ave//60}:{ave%60:02}</td>')
-
-    sort_df = df30.sort_values('ptime',ascending=False)
-    max_ptime = sort_df['ptime'].iloc[0]
-    max_date = sort_df['date'].iloc[0].strftime('%m/%d (%a)')
-    out.write(f'<td>{max_ptime}({max_date})</td></tr>')
 
 
 # ----------------------------------------------------------
