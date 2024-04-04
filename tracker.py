@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "1.07"       # 24/04/02
+version = "2.00"       # 24/04/03
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,13 +38,13 @@ end_year = 2024  #  データが存在する最終年
 
 lastdate = ""    #  最終データ日付
 lasthh = 0       #  何時までのデータか
-df = ""
+#df = ""
 
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 last_dd = 0
 #daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
-daily_df = ""    #  日ごとのデータ df
-df_dd_pf = ""    #  日ごとのデータ df  pf 用
+#daily_df = ""    #  日ごとのデータ df
+df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
@@ -108,6 +108,75 @@ def read_data():
     df_vn = df_vn.set_index("date")
     #print(df_vn)
 
+#   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd を作成する
+#   df_dd は ptime が 0 の日(データ)も含む
+def totalling_daily_data() :
+    global df_dd
+
+    df_pf_tmp  = df_pf.resample('D')['ptime'].sum()
+    df_vn_tmp  = df_vn.resample('D')['ptime'].sum()
+    date_list = []
+    ptime_list = []
+    ptime_list_vn = []
+    start_date  = datetime.date(2024, 1, 1)
+    target_date = start_date
+    end_date = datetime.date.today()
+    #  start_date から昨日まで全日付をチェックする
+    while target_date  < end_date:
+        str_date = target_date.strftime("%Y-%m-%d")
+        try:
+            ptime = df_pf_tmp.loc[str_date]
+        except KeyError:          #  日付のデータがなければ ptime は 0
+            ptime = 0 
+        try:
+            ptime_vn = df_vn_tmp.loc[str_date]
+        except KeyError:          #  日付のデータがなければ ptime は 0
+            ptime_vn = 0 
+
+        date_list.append(target_date)
+        ptime_list.append(ptime)
+        ptime_list_vn.append(ptime_vn)
+        target_date +=  datetime.timedelta(days=1)
+
+    df_dd = pd.DataFrame(list(zip(date_list,ptime_list,ptime_list_vn)), columns = ['date','ptime','vtime'])
+    df_dd['date'] = pd.to_datetime(df_dd["date"])
+
+# 月ごとの情報 month_data_list と df_past_pf を作成する
+# month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
+def create_month_data() :
+    global df_past_pf,month_data_list
+
+    curmm = 1
+    endmm = today_date.month
+    while curmm <= endmm :
+        start = datetime.datetime(2024, curmm, 1)
+        end = datetime.datetime(2024, curmm+1, 1)
+        df_mm = df_dd[(df_dd['date'] >= start) & (df_dd['date'] < end )]
+        count  = df_mm['ptime'].count()
+        if count == 0 :    #  データがなければ終了   月初の場合
+            break 
+        p_sum = df_mm['ptime'].sum()
+        p_ave = df_mm['ptime'].mean()
+        p_max = df_mm['ptime'].max()
+        v_sum = df_mm['vtime'].sum()
+        v_ave = df_mm['vtime'].mean()
+        v_max = df_mm['vtime'].max()
+
+        df_ptime_zero = (df_mm['ptime'] == 0)   # 時間が0 の日数
+        ptime_zero = df_ptime_zero.sum()
+        df_vtime_zero = (df_mm['vtime'] == 0)   # 時間が0 の日数
+        vtime_zero = df_vtime_zero.sum()
+        yymm = 24 * 100 + curmm
+        tp = (yymm,p_sum,p_ave,p_max,ptime_zero,v_sum,v_ave,v_max,vtime_zero)
+        month_data_list.append(tp)
+
+        df_tmp = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
+        df_past_pf = pd.concat([df_past_pf, df_tmp])
+        curmm += 1 
+
+    df_past_pf = df_past_pf.reset_index(drop=True)
+    print(month_data_list)
+
 def date_settings():
     global  today_date,today_mm,today_dd,yesterday,today_datetime
     today_datetime = datetime.datetime.today()
@@ -164,46 +233,12 @@ def post_process_datafile() :
     if os.path.isfile(file) :
         os.remove(file)
 
-#   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd_pf を作成する
-#   df_dd_pf は ptime が 0 の日(データ)も含む
-def totalling_daily_data() :
-    global df_dd_pf,df_dd_vn
-
-    df_pf_tmp  = df_pf.resample('D')['ptime'].sum()
-    df_vn_tmp  = df_vn.resample('D')['ptime'].sum()
-    date_list = []
-    ptime_list = []
-    ptime_list_vn = []
-    start_date  = datetime.date(2024, 1, 1)
-    target_date = start_date
-    end_date = datetime.date.today()
-    #  start_date から昨日まで全日付をチェックする
-    while target_date  < end_date:
-        str_date = target_date.strftime("%Y-%m-%d")
-        try:
-            ptime = df_pf_tmp.loc[str_date]
-        except KeyError:          #  日付のデータがなければ ptime は 0
-            ptime = 0 
-        try:
-            ptime_vn = df_vn_tmp.loc[str_date]
-        except KeyError:          #  日付のデータがなければ ptime は 0
-            ptime_vn = 0 
-        date_list.append(target_date)
-        ptime_list.append(ptime)
-        ptime_list_vn.append(ptime_vn)
-        target_date +=  datetime.timedelta(days=1)
-
-    df_dd_pf = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    df_dd_pf['date'] = pd.to_datetime(df_dd_pf["date"])
-
-    df_dd_vn = pd.DataFrame(list(zip(date_list,ptime_list_vn)), columns = ['date','ptime'])
-    df_dd_vn['date'] = pd.to_datetime(df_dd_vn["date"])
 
 #   pf_ptime_csv ファイルに yy/mm/dd,ptime の形式で全データを出力する
 #   バックアップ用途
 def output_ptime_to_csv():
     f = open(pf_ptime_csv,'w',encoding='utf-8')
-    for _ , row in df_dd_pf.iterrows() :    
+    for _ , row in df_dd.iterrows() :    
         date_str = row['date'].strftime("%Y/%m/%d")
         f.write(f"{date_str},{row['ptime']}\n")
     f.close()
@@ -212,7 +247,7 @@ def output_ptime_to_csv():
 #  TODO:  30日間等期限つきにする
 def daily_movav() :
     mov_ave_dd = 7
-    df_movav  =  df_dd_pf.copy()
+    df_movav  =  df_dd.copy()
     df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
     for _ , row in df_movav.iterrows() :
         ptime = row['ptime']
@@ -224,7 +259,7 @@ def daily_movav() :
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
-    df30 = df_dd_pf.tail(30)
+    df30 = df_dd.tail(30)
     for _ , row in df30.iterrows() :
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['ptime']:5.0f}],")
@@ -256,7 +291,7 @@ def month_info()  :
     #  TODO: 年は考慮していない
     
     for item in month_data_list :
-        yymm,sum,ave,max,zero = item
+        yymm,sum,ave,max,zero,vsum,vave,vmax,vzero = item
         yy = int(yymm / 100)
         mm =  yymm % 100
         if mm  == today_mm :   #  今月なら 前日まで
@@ -267,38 +302,12 @@ def month_info()  :
         out.write(f'<tr><td align="right">{yymm}</td><td align="right">{sum//60}:{sum%60:02}</td>'
                   f'<td align="right">{ave:5.1f}</td><td align="right">{max//60}:{max%60:02}</td>'
                   f'<td align="right">{zero}</td>'
-                  f'<td align="right">{zero/td * 100:5.2f}</td></tr>\n')
-    
-# 月ごとの情報 month_data_list と df_past_pf を作成する
-# month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
-def create_month_data() :
-    global df_past_pf,month_data_list
+                  f'<td align="right">{zero/td * 100:5.2f}</td>'
+                  f'<td align="right">{vsum//60}:{sum%60:02}</td>'
+                  f'<td align="right">{vave:5.1f}</td><td align="right">{vmax//60}:{vmax%60:02}</td>'
+                  f'<td align="right">{vzero}</td>'
+                  f'<td align="right">{vzero/td * 100:5.2f}</td></tr>\n')
 
-    curmm = 1
-    endmm = today_date.month
-    while curmm <= endmm :
-        start = datetime.datetime(2024, curmm, 1)
-        end = datetime.datetime(2024, curmm+1, 1)
-        df_mm = df_dd_pf[(df_dd_pf['date'] >= start) & (df_dd_pf['date'] < end )]
-        count  = df_mm['ptime'].count()
-        if count == 0 :    #  データがなければ終了   月初の場合
-            break 
-        p_sum = df_mm['ptime'].sum()
-        p_ave = df_mm['ptime'].mean()
-        p_max = df_mm['ptime'].max()
-        df_ptime_zero = (df_mm['ptime'] == 0)   # 時間が0 の日数
-        ptime_zero = df_ptime_zero.sum()
-        
-        yymm = 24 * 100 + curmm
-        tp = (yymm,p_sum,p_ave,p_max,ptime_zero)
-        month_data_list.append(tp)
-
-        df_tmp = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
-        df_past_pf = pd.concat([df_past_pf, df_tmp])
-        curmm += 1 
-
-    df_past_pf = df_past_pf.reset_index(drop=True)
-    print(month_data_list)
 
 #   月ごとの時間グラフ
 def month_graph() :
@@ -313,7 +322,7 @@ def month_graph() :
 #   ランキング
 #   TODO:  今月のランキング
 def ranking() :
-    sort_df = df_dd_pf.copy()
+    sort_df = df_dd.copy()
     sort_df = sort_df.sort_values('ptime',ascending=False)
     i = 0 
     for _ , row in sort_df.iterrows() :
@@ -394,8 +403,6 @@ def read_config() :
     pixela_token = conf.readline().strip()
     debug = int(conf.readline().strip())
     conf.close()
-
-
 
 # ----------------------------------------------------------
 main_proc()
