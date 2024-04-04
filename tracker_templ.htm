@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/03/28 -->
+    <!-- 24/04/03 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -82,7 +82,7 @@
                     }
                 };
         
-                var chart = new google.visualization.LineChart(document.getElementById('month_graph'));
+                var chart = new google.visualization.ColumnChart(document.getElementById('month_graph'));
                 chart.draw(data, options);
             }
         );
@@ -95,7 +95,8 @@
 
         <h2>月別データ</h2>
         <table>
-            <tr><th>月</th><th>合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習日</th><th>無練習率</th></tr>
+            <tr><th>月</th><th>合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習日</th><th>無練習率</th>
+                <th>Vn合計(時)</th><th>平均(分)</th><th>最大</th><th>無練習日</th><th>無練習率</th></tr>
             %month_info% 
         </table>
 
