@@ -40,6 +40,33 @@
             function() {
                 var data = google.visualization.arrayToDataTable([
         [       '', '時間'],
+    %daily_graph_vn%
+                ]);
+        
+                var options = {
+                    title: '日別時間',
+                    colors: ['green'] ,
+                    vAxis: {minValue:0,ticks:[0,30,60]},
+                    hAxis: {title: '日付'},
+                    chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
+                    backgroundColor: '#f1f8e9' ,
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph_vn'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+
+<script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
     %daily_movav%
                 ]);
         
@@ -100,8 +127,11 @@
             %month_info% 
         </table>
 
-        <h2>日別グラフ</h2>
+        <h2>日別グラフ(Pf)</h2>
         <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
+        <h2>日別グラフ(Vn)</h2>
+        <div id="daily_graph_vn" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <h2>移動平均グラフ</h2>
         <div id="daily_movav" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
@@ -114,13 +144,6 @@
 
         <h2>月別グラフ</h2>
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
-
-        <!-- <table>
-            <tr>
-                <th>日付</th><th>時間</th>
-            </tr>
-            %daily_table%
-        </table> -->
 
     </body>
 </html>
