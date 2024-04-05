@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.00"       # 24/04/03
+version = "2.01"       # 24/04/05
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,7 +25,7 @@ resultfile = appdir + "/tracker.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\tracker.log"
 pastdata = appdir + "/pastdata.txt"
-pf_ptime_csv = appdir + "/pfdata.txt"
+rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
@@ -234,13 +234,13 @@ def post_process_datafile() :
         os.remove(file)
 
 
-#   pf_ptime_csv ファイルに yy/mm/dd,ptime の形式で全データを出力する
+#   rawdata ファイルに yy/mm/dd,ptime,vtime の形式で全データを出力する
 #   バックアップ用途
 def output_ptime_to_csv():
-    f = open(pf_ptime_csv,'w',encoding='utf-8')
+    f = open(rawdata,'w',encoding='utf-8')
     for _ , row in df_dd.iterrows() :    
         date_str = row['date'].strftime("%Y/%m/%d")
-        f.write(f"{date_str},{row['ptime']}\n")
+        f.write(f"{date_str},{row['ptime']},{row['vtime']}\n")
     f.close()
 
 #  7日間の移動平均
@@ -264,6 +264,11 @@ def daily_graph() :
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['ptime']:5.0f}],")
 
+def daily_graph_vn() :
+    df30 = df_dd.tail(30)
+    for _ , row in df30.iterrows() :
+        date_str = row['date'].strftime('%d')
+        out.write(f"['{date_str}',{row['vtime']:5.0f}],")
 
 def daily_table() :
     global last_dd,total_time 
@@ -354,15 +359,18 @@ def parse_template() :
     f = open(templatefile , 'r', encoding='utf-8')
     out = open(resultfile,'w' ,  encoding='utf-8')
     for line in f :
-        if "%daily_table%" in line :
-            daily_table()
-            continue
+        # if "%daily_table%" in line :
+        #     daily_table()
+        #     continue
         if "%daily_graph%" in line :
             daily_graph()
             continue
-        if "%cur_mon_info%" in line :
-            cur_mon_info()
+        if "%daily_graph_vn%" in line :
+            daily_graph_vn()
             continue
+        # if "%cur_mon_info%" in line :
+        #     cur_mon_info()
+        #     continue
         if "%daily_movav%" in line :
             daily_movav()
             continue
