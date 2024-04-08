@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.01"       # 24/04/05
+version = "2.02"       # 24/04/08
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,12 +38,11 @@ end_year = 2024  #  データが存在する最終年
 
 lastdate = ""    #  最終データ日付
 lasthh = 0       #  何時までのデータか
-#df = ""
 
+df_mon_pf = ""   #  過去の月ごとの時間  pf
+df_mon_vn = ""   #  過去の月ごとの時間  vn
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 last_dd = 0
-#daily_data = []  #  日ごとのデータ リスト  各要素は (date, ptime) をもつリスト
-#daily_df = ""    #  日ごとのデータ df
 df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
@@ -64,7 +63,6 @@ def main_proc():
     parse_template()
     ftp_upload()
     post_process_datafile()
-    #daily_graph()
     logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logf.close()
 
@@ -141,10 +139,10 @@ def totalling_daily_data() :
     df_dd = pd.DataFrame(list(zip(date_list,ptime_list,ptime_list_vn)), columns = ['date','ptime','vtime'])
     df_dd['date'] = pd.to_datetime(df_dd["date"])
 
-# 月ごとの情報 month_data_list と df_past_pf を作成する
+# 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 def create_month_data() :
-    global df_past_pf,month_data_list
+    global df_mon_pf,df_mon_vn,month_data_list
 
     curmm = 1
     endmm = today_date.month
@@ -170,12 +168,15 @@ def create_month_data() :
         tp = (yymm,p_sum,p_ave,p_max,ptime_zero,v_sum,v_ave,v_max,vtime_zero)
         month_data_list.append(tp)
 
-        df_tmp = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
-        df_past_pf = pd.concat([df_past_pf, df_tmp])
+        df_tmp_pf = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
+        df_mon_pf = pd.concat([df_mon_pf, df_tmp_pf])
+        df_tmp_vn = pd.DataFrame({'yymm': [yymm], 'vtime': [v_sum]})
+        df_mon_vn = pd.concat([df_mon_vn, df_tmp_vn])
         curmm += 1 
 
-    df_past_pf = df_past_pf.reset_index(drop=True)
-    print(month_data_list)
+    df_mon_pf = df_mon_pf.reset_index(drop=True)
+    df_mon_vn = df_mon_vn.reset_index(drop=True)
+    #print(df_mon_vn)
 
 def date_settings():
     global  today_date,today_mm,today_dd,yesterday,today_datetime
@@ -185,10 +186,13 @@ def date_settings():
     today_dd = today_date.day
     yesterday = today_date - timedelta(days=1)
 
+#   pf と vn で過去データの数が違うので df は別に持つ
 def read_pastdata():
-    global df_past_pf
+    global df_mon_pf,df_mon_vn
     yymmpf_list = []
+    yymmvn_list = []
     pf_list = []
+    vn_list = []
     f = open(pastdata,'r', encoding='utf-8')
     for line in f :
         line = line.strip()
@@ -204,10 +208,14 @@ def read_pastdata():
         if yymm >= 2001 :     # pf は 20年1月から
             yymmpf_list.append(yymm)
             pf_list.append(pf)
+        yymmvn_list.append(yymm)
+        vn_list.append(vn)
+        
 
     f.close()
-    df_past_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
-    #print(df_past_pf)
+    df_mon_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
+    df_mon_vn = pd.DataFrame(list(zip(yymmvn_list,vn_list)), columns = ['yymm','vtime'])
+    #print(df_mon_vn)
 
 def conv_hhmm_mm(hhmm) :
     if hhmm == "" :
@@ -316,12 +324,21 @@ def month_info()  :
 
 #   月ごとの時間グラフ
 def month_graph() :
-    for _ , row in df_past_pf.iterrows() :
+    for _ , row in df_mon_pf.iterrows() :
         yymm = int(row['yymm'])
         yy = int(yymm / 100) + 2000
         mm = yymm % 100
         n = calendar.monthrange(yy, mm)[1]   # 月の日数
         r = int(row['ptime']) / n 
+        out.write(f"['{row['yymm']}',{r}],")
+
+def month_graph_vn() :
+    for _ , row in df_mon_vn.iterrows() :
+        yymm = int(row['yymm'])
+        yy = int(yymm / 100) + 2000
+        mm = yymm % 100
+        n = calendar.monthrange(yy, mm)[1]   # 月の日数
+        r = int(row['vtime']) / n 
         out.write(f"['{row['yymm']}',{r}],")
 
 #   ランキング
@@ -382,6 +399,9 @@ def parse_template() :
             continue
         if "%month_graph%" in line :
             month_graph()
+            continue
+        if "%month_graph_vn%" in line :
+            month_graph_vn()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
