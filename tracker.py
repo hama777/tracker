@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.02"       # 24/04/08
+version = "2.03"       # 24/04/09
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -264,6 +264,17 @@ def daily_movav() :
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{row['ptime']:5.0f}],") 
 
+def daily_movav_vn() :
+    mov_ave_dd = 7
+    df_movav  =  df_dd.copy()
+    df_movav['vtime']  = df_movav['vtime'].rolling(mov_ave_dd).mean()
+    for _ , row in df_movav.iterrows() :
+        ptime = row['vtime']
+        if pd.isna(ptime) :
+            continue
+        dd = row['date'].strftime("%m/%d")
+        out.write(f"['{dd}',{row['vtime']:5.0f}],") 
+
 
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
@@ -390,6 +401,9 @@ def parse_template() :
         #     continue
         if "%daily_movav%" in line :
             daily_movav()
+            continue
+        if "%daily_movav_vn%" in line :
+            daily_movav_vn()
             continue
         if "%month_info%" in line :
             month_info()
