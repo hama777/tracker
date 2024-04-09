@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/04/08 -->
+    <!-- 24/04/09 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -61,7 +61,7 @@
         );
     </script>
 
-<script type="text/javascript">
+    <script type="text/javascript">
         google.load("visualization", "1", {packages:["corechart"]});
         google.setOnLoadCallback(
             function() {
@@ -87,6 +87,33 @@
             }
         );
     </script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
+    %daily_movav_vn%
+                ]);
+        
+                var options = {
+                    title: '日別時間7日移動平均',
+                    colors: ['green'] ,
+                    hAxis: {title: '日'},
+                    chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
+                    backgroundColor: '#f1f8e9',
+                    curveType: 'function',
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.LineChart(document.getElementById('daily_movav_vn'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+
 
     <script type="text/javascript">
         google.load("visualization", "1", {packages:["corechart"]});
@@ -159,8 +186,10 @@
         <h2>日別グラフ(Vn)</h2>
         <div id="daily_graph_vn" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
-        <h2>移動平均グラフ</h2>
+        <h2>移動平均グラフ(pf)</h2>
         <div id="daily_movav" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <h2>移動平均グラフ(vn)</h2>
+        <div id="daily_movav_vn" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <h2>練習時間ランキング</h2>
         <table class="rank">
