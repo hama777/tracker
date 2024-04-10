@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/04/09 -->
+    <!-- 24/04/10 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -192,10 +192,22 @@
         <div id="daily_movav_vn" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <h2>練習時間ランキング</h2>
-        <table class="rank">
-            <tr><th>順位</th><th>時間</th><th>日付</th></tr>
-            %ranking%
-        </table>
+        <div class="flex">
+            <div class='frame'>
+                <span style="margin-left: 30px;">総合</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %ranking%
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">30日</span><br>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %ranking_month%
+                </table>
+            </div>
+        </div>
 
         <h2>月別グラフ(Pf)</h2>
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
