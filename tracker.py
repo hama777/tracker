@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.03"       # 24/04/09
+version = "2.04"       # 24/04/10
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -370,6 +370,23 @@ def ranking() :
         if i >= 10 :
             break
 
+def ranking_month() :
+    sort_df = df_dd.copy()
+    sort_df = sort_df.tail(30)
+    sort_df = sort_df.sort_values('ptime',ascending=False)
+    i = 0 
+    for _ , row in sort_df.iterrows() :
+        i += 1 
+        date_str = row['date'].strftime('%m/%d (%a)')
+        if row['date'].date() == yesterday :   # row['date'] はdatetime型なのでdate()で日付部分のみ
+            date_str = f'<span class=red>{date_str}</span>'
+        hh = row['ptime'] // 60
+        mm = row['ptime'] % 60
+        time_str = f'{hh:02}:{mm:02}'
+        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{time_str}</td><td>{date_str}</td></tr>")
+        if i >= 10 :
+            break
+
 
 def ftp_upload() : 
     if debug == 1 :
@@ -410,6 +427,9 @@ def parse_template() :
             continue
         if "%ranking%" in line :
             ranking()
+            continue
+        if "%ranking_month%" in line :
+            ranking_month()
             continue
         if "%month_graph%" in line :
             month_graph()
