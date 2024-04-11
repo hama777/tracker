@@ -12,7 +12,11 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.04"       # 24/04/10
+version = "2.05"       # 24/04/11
+
+# TODO:  年別グラフ
+# 
+
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,15 +38,15 @@ out = ""
 logf = ""
 pixela_url = ""
 pixela_token = ""
-end_year = 2024  #  データが存在する最終年
+#end_year = 2024  #  データが存在する最終年
 
-lastdate = ""    #  最終データ日付
-lasthh = 0       #  何時までのデータか
+#lastdate = ""    #  最終データ日付
+#lasthh = 0       #  何時までのデータか
 
 df_mon_pf = ""   #  過去の月ごとの時間  pf
 df_mon_vn = ""   #  過去の月ごとの時間  vn
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
-last_dd = 0
+#last_dd = 0
 df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
@@ -210,7 +214,6 @@ def read_pastdata():
             pf_list.append(pf)
         yymmvn_list.append(yymm)
         vn_list.append(vn)
-        
 
     f.close()
     df_mon_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
@@ -251,8 +254,7 @@ def output_ptime_to_csv():
         f.write(f"{date_str},{row['ptime']},{row['vtime']}\n")
     f.close()
 
-#  7日間の移動平均
-#  TODO:  30日間等期限つきにする
+#  未使用
 def daily_movav() :
     mov_ave_dd = 7
     df_movav  =  df_dd.copy()
@@ -264,6 +266,7 @@ def daily_movav() :
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{row['ptime']:5.0f}],") 
 
+#  未使用
 def daily_movav_vn() :
     mov_ave_dd = 7
     df_movav  =  df_dd.copy()
@@ -274,6 +277,25 @@ def daily_movav_vn() :
             continue
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{row['vtime']:5.0f}],") 
+
+#  7日間の移動平均
+#  TODO:  30日間等期限つきにする
+def daily_movav_com(type) :
+    mov_ave_dd = 7
+    df_movav  =  df_dd.copy()
+    if type == 0 :
+        df_movav['mvave']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
+    else :
+        df_movav['mvave']  = df_movav['vtime'].rolling(mov_ave_dd).mean()
+    for _ , row in df_movav.iterrows() :
+        ptime = row['mvave']
+        if pd.isna(ptime) :
+            continue
+        dd = row['date'].strftime("%m/%d")
+        out.write(f"['{dd}',{ptime:5.0f}],") 
+
+
+
 
 
 #   過去30日間の1日ごとの練習時間をグラフにする
@@ -417,10 +439,12 @@ def parse_template() :
         #     cur_mon_info()
         #     continue
         if "%daily_movav%" in line :
-            daily_movav()
+            daily_movav_com(0)
+            #daily_movav()
             continue
         if "%daily_movav_vn%" in line :
-            daily_movav_vn()
+            #daily_movav_vn()
+            daily_movav_com(1)
             continue
         if "%month_info%" in line :
             month_info()
