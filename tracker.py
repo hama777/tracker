@@ -12,9 +12,9 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.05"       # 24/04/11
+version = "2.06"       # 24/04/12
 
-# TODO:  年別グラフ
+# TODO:  年別グラフ  pixela
 # 
 
 debug = 0     #  1 ... debug
@@ -38,15 +38,10 @@ out = ""
 logf = ""
 pixela_url = ""
 pixela_token = ""
-#end_year = 2024  #  データが存在する最終年
-
-#lastdate = ""    #  最終データ日付
-#lasthh = 0       #  何時までのデータか
 
 df_mon_pf = ""   #  過去の月ごとの時間  pf
 df_mon_vn = ""   #  過去の月ごとの時間  vn
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
-#last_dd = 0
 df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
@@ -64,6 +59,7 @@ def main_proc():
     totalling_daily_data()
     output_ptime_to_csv()
     create_month_data()
+    create_year_data()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -182,6 +178,26 @@ def create_month_data() :
     df_mon_vn = df_mon_vn.reset_index(drop=True)
     #print(df_mon_vn)
 
+def create_year_data() :
+    cur = 0
+    ptime = 0 
+    ptime_list = []
+    yy_list = []
+    for _ , row in df_mon_pf.iterrows() :
+        yymm = row['yymm']
+        yy = int(yymm / 100)
+        if yy == cur :
+            ptime = ptime + row['ptime']
+        else :
+            if cur != 0 :
+                ptime_list.append(ptime)
+            cur = yy
+            yy_list.append(yy)
+            ptime = row['ptime']
+    ptime_list.append(ptime)
+    df_yy_pf = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
+    print(df_yy_pf)
+
 def date_settings():
     global  today_date,today_mm,today_dd,yesterday,today_datetime
     today_datetime = datetime.datetime.today()
@@ -254,30 +270,6 @@ def output_ptime_to_csv():
         f.write(f"{date_str},{row['ptime']},{row['vtime']}\n")
     f.close()
 
-#  未使用
-def daily_movav() :
-    mov_ave_dd = 7
-    df_movav  =  df_dd.copy()
-    df_movav['ptime']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
-    for _ , row in df_movav.iterrows() :
-        ptime = row['ptime']
-        if pd.isna(ptime) :
-            continue
-        dd = row['date'].strftime("%m/%d")
-        out.write(f"['{dd}',{row['ptime']:5.0f}],") 
-
-#  未使用
-def daily_movav_vn() :
-    mov_ave_dd = 7
-    df_movav  =  df_dd.copy()
-    df_movav['vtime']  = df_movav['vtime'].rolling(mov_ave_dd).mean()
-    for _ , row in df_movav.iterrows() :
-        ptime = row['vtime']
-        if pd.isna(ptime) :
-            continue
-        dd = row['date'].strftime("%m/%d")
-        out.write(f"['{dd}',{row['vtime']:5.0f}],") 
-
 #  7日間の移動平均
 #  TODO:  30日間等期限つきにする
 def daily_movav_com(type) :
@@ -294,10 +286,6 @@ def daily_movav_com(type) :
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{ptime:5.0f}],") 
 
-
-
-
-
 #   過去30日間の1日ごとの練習時間をグラフにする
 def daily_graph() :
     df30 = df_dd.tail(30)
@@ -310,20 +298,6 @@ def daily_graph_vn() :
     for _ , row in df30.iterrows() :
         date_str = row['date'].strftime('%d')
         out.write(f"['{date_str}',{row['vtime']:5.0f}],")
-
-def daily_table() :
-    global last_dd,total_time 
-    pass 
-
-    # daily  = df.resample('D')['ptime'].sum()
-    # total_time = 0 
-    # for dt,v in daily.items() :
-    #     dt_str = dt.strftime('%m/%d')
-    #     total_time += v
-    #     last_dd = dt.day
-    #     out.write(f'<tr><td>{dt_str}</td><td>{v}</tr>\n')
-    #print(last_dd)    
-
 
 #   前月の日数
 def last_month_days() :
@@ -426,24 +400,16 @@ def parse_template() :
     f = open(templatefile , 'r', encoding='utf-8')
     out = open(resultfile,'w' ,  encoding='utf-8')
     for line in f :
-        # if "%daily_table%" in line :
-        #     daily_table()
-        #     continue
         if "%daily_graph%" in line :
             daily_graph()
             continue
         if "%daily_graph_vn%" in line :
             daily_graph_vn()
             continue
-        # if "%cur_mon_info%" in line :
-        #     cur_mon_info()
-        #     continue
         if "%daily_movav%" in line :
             daily_movav_com(0)
-            #daily_movav()
             continue
         if "%daily_movav_vn%" in line :
-            #daily_movav_vn()
             daily_movav_com(1)
             continue
         if "%month_info%" in line :
