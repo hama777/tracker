@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.06"       # 24/04/12
+version = "2.07"       # 24/04/15
 
 # TODO:  年別グラフ  pixela
 # 
@@ -41,6 +41,7 @@ pixela_token = ""
 
 df_mon_pf = ""   #  過去の月ごとの時間  pf
 df_mon_vn = ""   #  過去の月ごとの時間  vn
+df_yy_pf = ""    #  年毎の時間  pf
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
@@ -179,6 +180,7 @@ def create_month_data() :
     #print(df_mon_vn)
 
 def create_year_data() :
+    global df_yy_pf
     cur = 0
     ptime = 0 
     ptime_list = []
@@ -196,14 +198,15 @@ def create_year_data() :
             ptime = row['ptime']
     ptime_list.append(ptime)
     df_yy_pf = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
-    print(df_yy_pf)
+    #print(df_yy_pf)
 
 def date_settings():
-    global  today_date,today_mm,today_dd,yesterday,today_datetime
+    global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
     today_datetime = datetime.datetime.today()
     today_date = datetime.date.today()
     today_mm = today_date.month
     today_dd = today_date.day
+    today_yy = today_date.year
     yesterday = today_date - timedelta(days=1)
 
 #   pf と vn で過去データの数が違うので df は別に持つ
@@ -330,12 +333,16 @@ def month_info()  :
 
 
 #   月ごとの時間グラフ
+#   TODO:  共通化
 def month_graph() :
     for _ , row in df_mon_pf.iterrows() :
         yymm = int(row['yymm'])
         yy = int(yymm / 100) + 2000
         mm = yymm % 100
-        n = calendar.monthrange(yy, mm)[1]   # 月の日数
+        if yy == today_yy and mm == today_mm :
+            n = today_dd - 1
+        else :
+            n = calendar.monthrange(yy, mm)[1]   # 月の日数
         r = int(row['ptime']) / n 
         out.write(f"['{row['yymm']}',{r}],")
 
@@ -344,9 +351,27 @@ def month_graph_vn() :
         yymm = int(row['yymm'])
         yy = int(yymm / 100) + 2000
         mm = yymm % 100
-        n = calendar.monthrange(yy, mm)[1]   # 月の日数
+        if yy == today_yy and mm == today_mm :
+            n = today_dd - 1
+        else :
+            n = calendar.monthrange(yy, mm)[1]   # 月の日数
         r = int(row['vtime']) / n 
         out.write(f"['{row['yymm']}',{r}],")
+
+def year_graph_pf() :
+    for _ , row in df_yy_pf.iterrows() :
+        yy = row['yy']
+        ptime = row['ptime'] 
+        if yy == (today_yy - 2000) :
+            start = datetime.date(yy+2000,1,1)   # 1/1
+            dd = today_date - start         # 1/1 からの日数
+            ptime = ptime  / dd.days
+        else :
+            ptime = ptime  / 365
+
+        out.write(f"['{yy}',{ptime}],")
+
+
 
 #   ランキング
 #   TODO:  今月のランキング
@@ -426,6 +451,9 @@ def parse_template() :
             continue
         if "%month_graph_vn%" in line :
             month_graph_vn()
+            continue
+        if "%year_graph_pf%" in line :
+            year_graph_pf()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
