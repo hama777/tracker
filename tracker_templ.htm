@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/04/15 -->
+    <!-- 24/04/16 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -195,6 +195,33 @@
         }
     );
 </script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+    [       '', '時間'],
+%year_graph_vn%
+            ]);
+    
+            var options = {
+                title: '月別時間',
+                colors: ['green'] ,
+                vAxis: {minValue:0},
+                hAxis: {title: '年月'},
+                chartArea: { backgroundColor: '#f1f7f9' , left:50,right:30 },
+                backgroundColor: '#f1f8e9' ,
+                legend: {
+                    position: 'none'
+                }
+            };
+    
+            var chart = new google.visualization.ColumnChart(document.getElementById('year_graph_vn'));
+            chart.draw(data, options);
+        }
+    );
+</script>
+
 
 <body>
         <h1>Tracker List</h1>
@@ -241,8 +268,20 @@
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>月別グラフ(Vn)</h2>
         <div id="month_graph_vn" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
-        <h2>年別グラフ(Pf)</h2>
-        <div id="year_graph_pf" style="width:500px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <h2>年別グラフ</h2>
+        <div class="flex">
+            <div class='frame'>
+                <span style="margin-left: 30px;">Pf</span>
+                <div id="year_graph_pf" style="width:500px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">Vn</span>
+                <div id="year_graph_vn" style="width:500px; height:300px;  margin-top:20px ; margin-left:  50px; " ></div>
+            </div>
+        </div>
+
+
+
 
     </body>
 </html>
