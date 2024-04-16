@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.07"       # 24/04/15
+version = "2.08"       # 24/04/16
 
 # TODO:  年別グラフ  pixela
 # 
@@ -42,6 +42,7 @@ pixela_token = ""
 df_mon_pf = ""   #  過去の月ごとの時間  pf
 df_mon_vn = ""   #  過去の月ごとの時間  vn
 df_yy_pf = ""    #  年毎の時間  pf
+df_yy_vn = ""    #  年毎の時間  vn
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
@@ -61,6 +62,7 @@ def main_proc():
     output_ptime_to_csv()
     create_month_data()
     create_year_data()
+    create_year_data_vn()
     parse_template()
     ftp_upload()
     post_process_datafile()
@@ -199,6 +201,28 @@ def create_year_data() :
     ptime_list.append(ptime)
     df_yy_pf = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
     #print(df_yy_pf)
+
+def create_year_data_vn() :
+    global df_yy_vn
+    cur = 0
+    ptime = 0 
+    ptime_list = []
+    yy_list = []
+    for _ , row in df_mon_vn.iterrows() :
+        yymm = row['yymm']
+        yy = int(yymm / 100)
+        if yy == cur :
+            ptime = ptime + row['vtime']
+        else :
+            if cur != 0 :
+                ptime_list.append(ptime)
+            cur = yy
+            yy_list.append(yy)
+            ptime = row['vtime']
+    ptime_list.append(ptime)
+    df_yy_vn = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
+    #print(df_yy_vn)
+
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
@@ -371,6 +395,18 @@ def year_graph_pf() :
 
         out.write(f"['{yy}',{ptime}],")
 
+def year_graph_vn() :
+    for _ , row in df_yy_vn.iterrows() :
+        yy = row['yy']
+        ptime = row['ptime'] 
+        if yy == (today_yy - 2000) :
+            start = datetime.date(yy+2000,1,1)   # 1/1
+            dd = today_date - start         # 1/1 からの日数
+            ptime = ptime  / dd.days
+        else :
+            ptime = ptime  / 365
+
+        out.write(f"['{yy}',{ptime}],")
 
 
 #   ランキング
@@ -454,6 +490,9 @@ def parse_template() :
             continue
         if "%year_graph_pf%" in line :
             year_graph_pf()
+            continue
+        if "%year_graph_vn%" in line :
+            year_graph_vn()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
