@@ -12,10 +12,9 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.08"       # 24/04/16
+version = "2.09"       # 24/04/17
 
-# TODO:  年別グラフ  pixela
-# 
+# TODO:  pixela
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -61,7 +60,7 @@ def main_proc():
     totalling_daily_data()
     output_ptime_to_csv()
     create_month_data()
-    create_year_data()
+    create_year_data_pf()
     create_year_data_vn()
     parse_template()
     ftp_upload()
@@ -171,9 +170,9 @@ def create_month_data() :
         tp = (yymm,p_sum,p_ave,p_max,ptime_zero,v_sum,v_ave,v_max,vtime_zero)
         month_data_list.append(tp)
 
-        df_tmp_pf = pd.DataFrame({'yymm': [yymm], 'ptime': [p_sum]})
+        df_tmp_pf = pd.DataFrame({'yymm': [yymm], 'time': [p_sum]})
         df_mon_pf = pd.concat([df_mon_pf, df_tmp_pf])
-        df_tmp_vn = pd.DataFrame({'yymm': [yymm], 'vtime': [v_sum]})
+        df_tmp_vn = pd.DataFrame({'yymm': [yymm], 'time': [v_sum]})
         df_mon_vn = pd.concat([df_mon_vn, df_tmp_vn])
         curmm += 1 
 
@@ -181,48 +180,34 @@ def create_month_data() :
     df_mon_vn = df_mon_vn.reset_index(drop=True)
     #print(df_mon_vn)
 
-def create_year_data() :
+def create_year_data_pf() :
     global df_yy_pf
-    cur = 0
-    ptime = 0 
-    ptime_list = []
-    yy_list = []
-    for _ , row in df_mon_pf.iterrows() :
-        yymm = row['yymm']
-        yy = int(yymm / 100)
-        if yy == cur :
-            ptime = ptime + row['ptime']
-        else :
-            if cur != 0 :
-                ptime_list.append(ptime)
-            cur = yy
-            yy_list.append(yy)
-            ptime = row['ptime']
-    ptime_list.append(ptime)
-    df_yy_pf = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
-    #print(df_yy_pf)
+    df_yy_pf = create_year_data_com(df_mon_pf)
 
 def create_year_data_vn() :
     global df_yy_vn
+    df_yy_vn = create_year_data_com(df_mon_vn)
+
+def create_year_data_com(df_mon) :
     cur = 0
     ptime = 0 
     ptime_list = []
     yy_list = []
-    for _ , row in df_mon_vn.iterrows() :
+    for _ , row in df_mon.iterrows() :
         yymm = row['yymm']
         yy = int(yymm / 100)
         if yy == cur :
-            ptime = ptime + row['vtime']
+            ptime = ptime + row['time']
         else :
             if cur != 0 :
                 ptime_list.append(ptime)
             cur = yy
             yy_list.append(yy)
-            ptime = row['vtime']
+            ptime = row['time']
     ptime_list.append(ptime)
-    df_yy_vn = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','ptime'])
-    #print(df_yy_vn)
-
+    df_yy = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','time'])
+    return(df_yy)
+    #print(df_yy_pf)
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
@@ -259,8 +244,8 @@ def read_pastdata():
         vn_list.append(vn)
 
     f.close()
-    df_mon_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','ptime'])
-    df_mon_vn = pd.DataFrame(list(zip(yymmvn_list,vn_list)), columns = ['yymm','vtime'])
+    df_mon_pf = pd.DataFrame(list(zip(yymmpf_list,pf_list)), columns = ['yymm','time'])
+    df_mon_vn = pd.DataFrame(list(zip(yymmvn_list,vn_list)), columns = ['yymm','time'])
     #print(df_mon_vn)
 
 def conv_hhmm_mm(hhmm) :
@@ -355,11 +340,9 @@ def month_info()  :
                   f'<td align="right">{vzero}</td>'
                   f'<td align="right">{vzero/td * 100:5.2f}</td></tr>\n')
 
-
 #   月ごとの時間グラフ
-#   TODO:  共通化
-def month_graph() :
-    for _ , row in df_mon_pf.iterrows() :
+def month_graph_com(df_mon) :
+    for _ , row in df_mon.iterrows() :
         yymm = int(row['yymm'])
         yy = int(yymm / 100) + 2000
         mm = yymm % 100
@@ -367,25 +350,14 @@ def month_graph() :
             n = today_dd - 1
         else :
             n = calendar.monthrange(yy, mm)[1]   # 月の日数
-        r = int(row['ptime']) / n 
+        r = int(row['time']) / n 
         out.write(f"['{row['yymm']}',{r}],")
 
-def month_graph_vn() :
-    for _ , row in df_mon_vn.iterrows() :
-        yymm = int(row['yymm'])
-        yy = int(yymm / 100) + 2000
-        mm = yymm % 100
-        if yy == today_yy and mm == today_mm :
-            n = today_dd - 1
-        else :
-            n = calendar.monthrange(yy, mm)[1]   # 月の日数
-        r = int(row['vtime']) / n 
-        out.write(f"['{row['yymm']}',{r}],")
-
-def year_graph_pf() :
-    for _ , row in df_yy_pf.iterrows() :
+#   年ごとの時間グラフ
+def year_graph_com(df_yy) :
+    for _ , row in df_yy.iterrows() :
         yy = row['yy']
-        ptime = row['ptime'] 
+        ptime = row['time'] 
         if yy == (today_yy - 2000) :
             start = datetime.date(yy+2000,1,1)   # 1/1
             dd = today_date - start         # 1/1 からの日数
@@ -394,23 +366,8 @@ def year_graph_pf() :
             ptime = ptime  / 365
 
         out.write(f"['{yy}',{ptime}],")
-
-def year_graph_vn() :
-    for _ , row in df_yy_vn.iterrows() :
-        yy = row['yy']
-        ptime = row['ptime'] 
-        if yy == (today_yy - 2000) :
-            start = datetime.date(yy+2000,1,1)   # 1/1
-            dd = today_date - start         # 1/1 からの日数
-            ptime = ptime  / dd.days
-        else :
-            ptime = ptime  / 365
-
-        out.write(f"['{yy}',{ptime}],")
-
 
 #   ランキング
-#   TODO:  今月のランキング
 def ranking() :
     sort_df = df_dd.copy()
     sort_df = sort_df.sort_values('ptime',ascending=False)
@@ -443,7 +400,6 @@ def ranking_month() :
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{time_str}</td><td>{date_str}</td></tr>")
         if i >= 10 :
             break
-
 
 def ftp_upload() : 
     if debug == 1 :
@@ -483,16 +439,16 @@ def parse_template() :
             ranking_month()
             continue
         if "%month_graph%" in line :
-            month_graph()
+            month_graph_com(df_mon_pf)
             continue
         if "%month_graph_vn%" in line :
-            month_graph_vn()
+            month_graph_com(df_mon_vn)
             continue
         if "%year_graph_pf%" in line :
-            year_graph_pf()
+            year_graph_com(df_yy_pf)
             continue
         if "%year_graph_vn%" in line :
-            year_graph_vn()
+            year_graph_com(df_yy_vn)
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
