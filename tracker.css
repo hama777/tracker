@@ -2,7 +2,7 @@
 table, td, th { 
     font-family: "Meiryo UI" ; 
     font-size: 14px; 
-    border: 1px #1C79C6 solid;  
+    border: 1px #6d2ff5 solid;  
     border-collapse: collapse; 
     padding: 3px; 
     margin-left: 100px;
@@ -24,8 +24,8 @@ h1{
 h2{
     margin: 0 0 0.5em;
     padding: 3px;
-    border-top: 3px double #1e90ff;
-    border-bottom: 3px double #1e90ff;
+    border-top: 3px double #6d2ff5;
+    border-bottom: 3px double #6d2ff5;
     font-size: 16px ;
     font-weight: bold;
 }
@@ -33,13 +33,13 @@ a {
     text-decoration: none; 
 }
 th { 
-    background-color :#68c672;
+    background-color :#cdacf2;
 }
 tr { 
     background-color : #ffffff;
 }
 tr:nth-child(2n+1) { 
-    background-color : #e8ffe2;
+    background-color : #e8dff2;
 }
 tr:hover  { 
     background-color : #f4ffc9;
@@ -55,7 +55,7 @@ td.right{
     display: flex;
 }
 .frame { 
-    background:linear-gradient(#f9ffdd, #c9ffdb) ; 
+    background:linear-gradient(#c4eaf5, #d2b5f7) ; 
     margin-left: 3px; margin-top: 4px; margin-right: 3px; border: solid 1px #0000ff; 
     border-radius: 10px; 
 }
