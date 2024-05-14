@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.00"       # 
+version = "0.01"       # 24/05/14
 
 # TODO:  pixela
 
@@ -46,16 +46,15 @@ def main_proc():
     read_config()
     read_data()
 
-    ftp_upload()
+    #ftp_upload()
 
 def read_data():
     global df_pf,df_vn,datafile
 
     datafile = datadir + dataname
-    date_list = []
-    date_list_vn = []
+    date_start = []
+    date_end = []
     process_list = []
-    process_list_vn = []
     if debug == 1 :
         if not os.path.isfile(datafile) :
             datafile = backfile
@@ -63,14 +62,16 @@ def read_data():
         reader = csv.reader(f)
         for row in reader:
             if row[0] == "睡眠" :
-                date_list.append(row[1])
+                date_start.append(row[1])
+                date_end.append(row[2])
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
                 process_list.append(tt)
 
-    df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','stime'])
-    df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date")
+    df = pd.DataFrame(list(zip(date_start,date_end,process_list)), columns = ['start','end','sleep'])
+    df["start"] = pd.to_datetime(df["start"])
+    df["end"] = pd.to_datetime(df["end"])
+    #df = df.set_index("date")
 
     print(df)
 
