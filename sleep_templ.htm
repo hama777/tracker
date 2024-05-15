@@ -1,0 +1,46 @@
+<html>
+    <!-- 24/05/15 -->
+    <head>
+        <title>Tracker List</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <link rel="stylesheet" href="tracker.css">
+    </head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
+    %daily_graph%
+                ]);
+        
+                var options = {
+                    title: '日別時間',
+                    colors: ['#a442f5'] ,
+                    vAxis: {minValue:0},
+                    hAxis: {title: '日付'},
+                    chartArea: { backgroundColor: '#e3d8ed' , left:50,right:30 },
+                    backgroundColor: '#f1f8e9' ,
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+    <body>
+        <h1>Tracker List</h1>
+        <span style="font-size:12px;">Ver : %version%</span>
+        <span style="font-size:12px;">実行日時   : %today%</span>
+
+        <h2>日別睡眠時間グラフ</h2>
+        <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
+    </body>
+</html>
