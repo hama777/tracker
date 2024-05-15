@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.01"       # 24/05/14
+version = "0.02"       # 24/05/15
 
 # TODO:  pixela
 
@@ -23,8 +23,8 @@ dataname = "/CSVFile.csv"
 datafile = ""
 backfile = appdir + "/save.txt"
 datadir = appdir
-templatefile = appdir + "/tracker_templ.htm"
-resultfile = appdir + "/tracker.htm"
+templatefile = appdir + "/sleep_templ.htm"
+resultfile = appdir + "/sleep.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\tracker.log"
 pastdata = appdir + "/pastdata.txt"
@@ -32,7 +32,7 @@ rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
-df_pf = ""
+df = ""
 out = ""
 logf = ""
 pixela_url = ""
@@ -43,13 +43,15 @@ def main_proc():
 
     locale.setlocale(locale.LC_TIME, '')
 
+    date_settings()
     read_config()
     read_data()
+    parse_template()
 
     #ftp_upload()
 
 def read_data():
-    global df_pf,df_vn,datafile
+    global df,datafile
 
     datafile = datadir + dataname
     date_start = []
@@ -73,7 +75,17 @@ def read_data():
     df["end"] = pd.to_datetime(df["end"])
     #df = df.set_index("date")
 
-    print(df)
+    #print(df)
+
+def daily_graph() :
+    for _ , row in df.tail(30).iterrows() :    
+        str_date = row['end'].strftime("%d")
+        stime = int(row['sleep'])
+        hh = int(stime / 60)
+        mm = stime % 60
+
+        out.write(f"['{str_date}',[{hh},{mm},0]],")
+        #out.write(f"['{str_date}',{row['sleep']}],")
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
