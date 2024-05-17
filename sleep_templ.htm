@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/05/15 -->
+    <!-- 24/05/17 -->
     <head>
         <title>Tracker List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -34,6 +34,32 @@
             }
         );
     </script>
+
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+    [       '', '時間'],
+%start_time_graph%
+            ]);
+    
+            var options = {
+                title: '日別時間',
+                colors: ['#a442f5'] ,
+                hAxis: {title: '日付'},
+                chartArea: { backgroundColor: '#e3d8ed' , left:50,right:30 },
+                backgroundColor: '#f1f8e9' ,
+                legend: {
+                    position: 'none'
+                }
+            };
+    
+            var chart = new google.visualization.LineChart(document.getElementById('start_time_graph'));
+            chart.draw(data, options);
+        }
+    );
+</script>
     <body>
         <h1>Tracker List</h1>
         <span style="font-size:12px;">Ver : %version%</span>
@@ -41,6 +67,8 @@
 
         <h2>日別睡眠時間グラフ</h2>
         <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <h2>日別開始時刻グラフ</h2>
+        <div id="start_time_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
     </body>
 </html>
