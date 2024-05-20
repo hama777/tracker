@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.04"       # 24/05/17
+version = "0.05"       # 24/05/20
 
 # TODO:  pixela
 
@@ -95,6 +95,14 @@ def start_time_graph() :
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
+def end_time_graph() :
+    for _ , row in df.tail(30).iterrows() :    
+        str_date = row['end'].strftime("%d")
+        hh  = row['end'].strftime("%H")
+        mm  = row['end'].strftime("%M")
+        #print(str_date,hh,mm)
+        out.write(f"['{str_date}',[{hh},{mm},0]],")
+
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
     today_datetime = datetime.datetime.today()
@@ -138,6 +146,9 @@ def parse_template() :
             continue
         if "%start_time_graph%" in line :
             start_time_graph()
+            continue
+        if "%end_time_graph%" in line :
+            end_time_graph()
             continue
         if "%daily_movav%" in line :
             daily_movav_com(0)
