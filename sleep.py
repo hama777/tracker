@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.05"       # 24/05/20
+version = "0.06"       # 24/05/21
 
 # TODO:  pixela
 
@@ -46,6 +46,7 @@ def main_proc():
     date_settings()
     read_config()
     read_data()
+    #create_month_data()
     parse_template()
 
     #ftp_upload()
@@ -57,6 +58,7 @@ def read_data():
     date_start = []
     date_end = []
     process_list = []
+    index_date_list = []
     if debug == 1 :
         if not os.path.isfile(datafile) :
             datafile = backfile
@@ -69,11 +71,15 @@ def read_data():
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
                 process_list.append(tt)
+                s = row[2][0:10]   # 先頭の日付部分のみ取り出す  ex. 2024-01-02
+                index_date_list.append(s)
 
-    df = pd.DataFrame(list(zip(date_start,date_end,process_list)), columns = ['start','end','sleep'])
+    df = pd.DataFrame(list(zip(index_date_list,date_start,date_end,process_list)), 
+                      columns = ['date','start','end','sleep'])
     df["start"] = pd.to_datetime(df["start"])
     df["end"] = pd.to_datetime(df["end"])
-    #df = df.set_index("date")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date")
 
     #print(df)
 
@@ -102,6 +108,18 @@ def end_time_graph() :
         mm  = row['end'].strftime("%M")
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
+
+
+# 月ごとの情報  を作成する
+def month_info() :
+    print(df)
+    m_ave = df.resample(rule = "M").mean().to_dict()
+    for d, tm in m_ave['sleep'].items():
+        hh = int(tm / 60)
+        mm = int(tm) % 60
+        mon = d.month
+        out.write(f'<tr><td>{mon}</td><td>{hh}:{mm}</td></tr>\n')
+
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
