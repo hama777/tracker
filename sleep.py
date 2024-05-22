@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.06"       # 24/05/21
+version = "0.07"       # 24/05/22
 
 # TODO:  pixela
 
@@ -46,7 +46,7 @@ def main_proc():
     date_settings()
     read_config()
     read_data()
-    #create_month_data()
+    create_month_info()
     parse_template()
 
     #ftp_upload()
@@ -66,8 +66,10 @@ def read_data():
         reader = csv.reader(f)
         for row in reader:
             if row[0] == "睡眠" :
-                date_start.append(row[1])
-                date_end.append(row[2])
+                tt = row[1][11:]     #  時刻部分のみ取り出す  ex. 23:26:00
+                date_start.append(tt)
+                tt = row[2][11:]
+                date_end.append(tt)
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
                 process_list.append(tt)
@@ -110,16 +112,41 @@ def end_time_graph() :
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 
-# 月ごとの情報  を作成する
+# 月ごとの情報 month_info を作成する
+# month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
+def create_month_info() :
+    global month_info_list
+    month_info_list = []
+    yymm_list = []
+    sleep_list = []
+    start_list = []
+    end_list = []
+    m_ave = df.resample(rule = "M").mean().to_dict()
+    for d, tm in m_ave['sleep'].items():
+        yymm_list.append(d)
+        sleep_list.append(tm)
+    for _, tm in m_ave['start'].items():
+        start_list.append(tm)
+    for _, tm in m_ave['end'].items():
+        end_list.append(tm)
+
+    for yymm,sp,start,end in zip(yymm_list,sleep_list,start_list,end_list) :
+        mlist = [yymm,sp,start,end]
+        month_info_list.append(mlist)
+
+    print(month_info_list)
+
+
 def month_info() :
-    print(df)
     m_ave = df.resample(rule = "M").mean().to_dict()
     for d, tm in m_ave['sleep'].items():
         hh = int(tm / 60)
         mm = int(tm) % 60
         mon = d.month
         out.write(f'<tr><td>{mon}</td><td>{hh}:{mm}</td></tr>\n')
-
+    for d, tm in m_ave['start'].items():
+        hh = tm.hour
+        mm = tm.minute      
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
