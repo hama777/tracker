@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.07"       # 24/05/22
+version = "0.09"       # 24/05/24
 
 # TODO:  pixela
 
@@ -30,6 +30,7 @@ logfile = appdir + "\\tracker.log"
 pastdata = appdir + "/pastdata.txt"
 rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
+month_info_list = []   # 月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
 df = ""
@@ -47,6 +48,7 @@ def main_proc():
     read_config()
     read_data()
     create_month_info()
+    #month_info_table()
     parse_template()
 
     #ftp_upload()
@@ -116,12 +118,13 @@ def end_time_graph() :
 # month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
 def create_month_info() :
     global month_info_list
-    month_info_list = []
     yymm_list = []
     sleep_list = []
+    max_sleep = []
     start_list = []
     end_list = []
     m_ave = df.resample(rule = "M").mean().to_dict()
+    m_max = df.resample(rule = "M").max().to_dict()
     for d, tm in m_ave['sleep'].items():
         yymm_list.append(d)
         sleep_list.append(tm)
@@ -129,13 +132,28 @@ def create_month_info() :
         start_list.append(tm)
     for _, tm in m_ave['end'].items():
         end_list.append(tm)
+    for _, tm in m_max['sleep'].items():
+        max_sleep.append(tm)
 
-    for yymm,sp,start,end in zip(yymm_list,sleep_list,start_list,end_list) :
-        mlist = [yymm,sp,start,end]
+    for yymm,sp,max_sp,start,end in zip(yymm_list,sleep_list,max_sleep,start_list,end_list) :
+        mlist = [yymm,sp,max_sp,start,end]
         month_info_list.append(mlist)
 
-    print(month_info_list)
+    #print(month_info_list)
 
+def month_info_table() :
+    for dt in month_info_list :
+        yymm = dt[0]
+        yy = yymm.year
+        mon = yymm.month
+        sleep  = int(dt[1])
+        max_sleep  = int(dt[2])
+        start  = dt[3].time()
+        end  = dt[4].time()
+        #print(yy,mm,sleep,start,end)
+        out.write(f'<tr><td>{yy}/{mon}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
+                  f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td><td>{start.hour}:{start.minute}</td>'
+                  f'<td>{end.hour}:{end.minute}</td></tr>\n')
 
 def month_info() :
     m_ave = df.resample(rule = "M").mean().to_dict()
@@ -202,7 +220,7 @@ def parse_template() :
             daily_movav_com(1)
             continue
         if "%month_info%" in line :
-            month_info()
+            month_info_table()
             continue
         if "%ranking%" in line :
             ranking()
