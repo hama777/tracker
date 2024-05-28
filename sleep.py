@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.09"       # 24/05/24
+version = "0.10"       # 24/05/28
 
 # TODO:  pixela
 
@@ -88,8 +88,9 @@ def read_data():
     #print(df)
 
 def daily_graph() :
-    for _ , row in df.tail(30).iterrows() :    
-        str_date = row['end'].strftime("%d")
+    #print(df.tail(30))
+    for index , row in df.tail(30).iterrows() :    
+        str_date = index.strftime("%d")
         stime = int(row['sleep'])
         hh = int(stime / 60)
         mm = stime % 60
@@ -98,23 +99,23 @@ def daily_graph() :
         #out.write(f"['{str_date}',{row['sleep']}],")
 
 def start_time_graph() :
-    for _ , row in df.tail(30).iterrows() :    
-        str_date = row['end'].strftime("%d")
+    for index , row in df.tail(30).iterrows() :    
+        str_date = index.strftime("%d")
         hh  = row['start'].strftime("%H")
         mm  = row['start'].strftime("%M")
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 def end_time_graph() :
-    for _ , row in df.tail(30).iterrows() :    
-        str_date = row['end'].strftime("%d")
+    for index , row in df.tail(30).iterrows() :    
+        str_date = index.strftime("%d")
         hh  = row['end'].strftime("%H")
         mm  = row['end'].strftime("%M")
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 
-# 月ごとの情報 month_info を作成する
+# 月ごとの情報 month_info_list を作成する
 # month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
 def create_month_info() :
     global month_info_list
@@ -123,8 +124,8 @@ def create_month_info() :
     max_sleep = []
     start_list = []
     end_list = []
-    m_ave = df.resample(rule = "M").mean().to_dict()
-    m_max = df.resample(rule = "M").max().to_dict()
+    m_ave = df.resample(rule = "ME").mean().to_dict()
+    m_max = df.resample(rule = "ME").max().to_dict()
     for d, tm in m_ave['sleep'].items():
         yymm_list.append(d)
         sleep_list.append(tm)
@@ -155,16 +156,16 @@ def month_info_table() :
                   f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td><td>{start.hour}:{start.minute}</td>'
                   f'<td>{end.hour}:{end.minute}</td></tr>\n')
 
-def month_info() :
-    m_ave = df.resample(rule = "M").mean().to_dict()
-    for d, tm in m_ave['sleep'].items():
-        hh = int(tm / 60)
-        mm = int(tm) % 60
-        mon = d.month
-        out.write(f'<tr><td>{mon}</td><td>{hh}:{mm}</td></tr>\n')
-    for d, tm in m_ave['start'].items():
-        hh = tm.hour
-        mm = tm.minute      
+# def month_info() :
+#     m_ave = df.resample(rule = "M").mean().to_dict()
+#     for d, tm in m_ave['sleep'].items():
+#         hh = int(tm / 60)
+#         mm = int(tm) % 60
+#         mon = d.month
+#         out.write(f'<tr><td>{mon}</td><td>{hh}:{mm}</td></tr>\n')
+#     for d, tm in m_ave['start'].items():
+#         hh = tm.hour
+#         mm = tm.minute      
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
