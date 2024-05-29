@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.10"       # 24/05/28
+version = "0.11"       # 24/05/29
 
 # TODO:  pixela
 
@@ -124,8 +124,14 @@ def create_month_info() :
     max_sleep = []
     start_list = []
     end_list = []
+    max_start = []
+    max_end = []
+    min_sleep = []
+    min_start = []
+    min_end = []
     m_ave = df.resample(rule = "ME").mean().to_dict()
     m_max = df.resample(rule = "ME").max().to_dict()
+    m_min = df.resample(rule = "ME").min().to_dict()
     for d, tm in m_ave['sleep'].items():
         yymm_list.append(d)
         sleep_list.append(tm)
@@ -135,9 +141,21 @@ def create_month_info() :
         end_list.append(tm)
     for _, tm in m_max['sleep'].items():
         max_sleep.append(tm)
+    for _, tm in m_max['start'].items():
+        max_start.append(tm)
+    for _, tm in m_max['end'].items():
+        max_end.append(tm)
+    for _, tm in m_min['sleep'].items():
+        min_sleep.append(tm)
+    for _, tm in m_min['start'].items():
+        min_start.append(tm)
+    for _, tm in m_min['end'].items():
+        min_end.append(tm)
 
-    for yymm,sp,max_sp,start,end in zip(yymm_list,sleep_list,max_sleep,start_list,end_list) :
-        mlist = [yymm,sp,max_sp,start,end]
+    for yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e in zip(yymm_list,sleep_list,max_sleep,min_sleep,
+                                        start_list,max_start,min_start,
+                                        end_list,max_end,min_end  ) :
+        mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e]
         month_info_list.append(mlist)
 
     #print(month_info_list)
@@ -149,12 +167,21 @@ def month_info_table() :
         mon = yymm.month
         sleep  = int(dt[1])
         max_sleep  = int(dt[2])
-        start  = dt[3].time()
-        end  = dt[4].time()
+        min_sleep  = int(dt[3])
+        start  = dt[4].time()
+        max_start  = dt[5].time()
+        min_start  = dt[6].time()
+        end  = dt[7].time()
+        max_end  = dt[8].time()
+        min_end  = dt[9].time()
         #print(yy,mm,sleep,start,end)
         out.write(f'<tr><td>{yy}/{mon}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
-                  f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td><td>{start.hour}:{start.minute}</td>'
-                  f'<td>{end.hour}:{end.minute}</td></tr>\n')
+                  f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
+                  f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
+                  f'<td>{start.hour}:{start.minute:02}</td>'
+                  f'<td>{max_start.hour}:{max_start.minute:02}</td><td>{min_start.hour}:{min_start.minute:02}</td>'
+                  f'<td>{end.hour}:{end.minute:02}</td>'
+                  f'<td>{max_end.hour}:{max_end.minute:02}</td><td>{min_end.hour}:{min_end.minute:02}</td></tr>\n')
 
 # def month_info() :
 #     m_ave = df.resample(rule = "M").mean().to_dict()
