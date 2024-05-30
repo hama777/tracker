@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.11"       # 24/05/29
+version = "0.12"       # 24/05/30
 
 # TODO:  pixela
 
@@ -96,6 +96,17 @@ def daily_graph() :
         mm = stime % 60
 
         out.write(f"['{str_date}',[{hh},{mm},0]],")
+        #out.write(f"['{str_date}',{row['sleep']}],")
+
+def month_graph() :
+    #print(df.tail(30))
+    for dt in month_info_list :    
+        yymm = dt[0]
+        tm = dt[1]
+        yy = yymm.year
+        mon = yymm.month
+
+        out.write(f"['{yy}/{mon}',{tm}],")
         #out.write(f"['{str_date}',{row['sleep']}],")
 
 def start_time_graph() :
@@ -234,6 +245,9 @@ def parse_template() :
     for line in f :
         if "%daily_graph%" in line :
             daily_graph()
+            continue
+        if "%month_graph%" in line :
+            month_graph()
             continue
         if "%start_time_graph%" in line :
             start_time_graph()
