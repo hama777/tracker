@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "0.12"       # 24/05/30
+version = "1.00"       # 24/06/03
 
 # TODO:  pixela
 
@@ -51,7 +51,7 @@ def main_proc():
     #month_info_table()
     parse_template()
 
-    #ftp_upload()
+    ftp_upload()
 
 def read_data():
     global df,datafile
