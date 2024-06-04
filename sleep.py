@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 #import calendar
 
-version = "1.01"       # 24/06/04
+version = "1.02"       # 24/06/04
 
 # TODO:  pixela
 
@@ -20,8 +20,8 @@ debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 dataname = "/CSVFile.csv"
-datafile = ""
 backfile = appdir + "/save.txt"
+datafile = backfile
 datadir = appdir
 templatefile = appdir + "/sleep_templ.htm"
 resultfile = appdir + "/sleep.htm"
@@ -40,7 +40,7 @@ pixela_url = ""
 pixela_token = ""
 
 def main_proc():
-    global  datafile,logf
+    global  logf,ftp_url
 
     locale.setlocale(locale.LC_TIME, '')
 
@@ -55,16 +55,12 @@ def main_proc():
     ftp_upload()
 
 def read_data():
-    global df,datafile
+    global df
 
-    datafile = datadir + dataname
     date_start = []
     date_end = []
     process_list = []
     index_date_list = []
-    if debug == 1 :
-        if not os.path.isfile(datafile) :
-            datafile = backfile
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
