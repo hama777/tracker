@@ -7,12 +7,12 @@ import csv
 import datetime
 import pandas as pd
 import locale
-import shutil
+#import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
-import calendar
+#import calendar
 
-version = "1.00"       # 24/06/03
+version = "1.01"       # 24/06/04
 
 # TODO:  pixela
 
@@ -46,6 +46,7 @@ def main_proc():
 
     date_settings()
     read_config()
+    ftp_url = ftp_url.replace("index.htm","sleep.htm")
     read_data()
     create_month_info()
     #month_info_table()
@@ -193,17 +194,6 @@ def month_info_table() :
                   f'<td>{max_start.hour}:{max_start.minute:02}</td><td>{min_start.hour}:{min_start.minute:02}</td>'
                   f'<td>{end.hour}:{end.minute:02}</td>'
                   f'<td>{max_end.hour}:{max_end.minute:02}</td><td>{min_end.hour}:{min_end.minute:02}</td></tr>\n')
-
-# def month_info() :
-#     m_ave = df.resample(rule = "M").mean().to_dict()
-#     for d, tm in m_ave['sleep'].items():
-#         hh = int(tm / 60)
-#         mm = int(tm) % 60
-#         mon = d.month
-#         out.write(f'<tr><td>{mon}</td><td>{hh}:{mm}</td></tr>\n')
-#     for d, tm in m_ave['start'].items():
-#         hh = tm.hour
-#         mm = tm.minute      
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
