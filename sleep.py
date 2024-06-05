@@ -7,12 +7,10 @@ import csv
 import datetime
 import pandas as pd
 import locale
-#import shutil
 from ftplib import FTP_TLS
 from datetime import date,timedelta
-#import calendar
 
-version = "1.02"       # 24/06/04
+version = "1.03"       # 24/06/05
 
 # TODO:  pixela
 
@@ -20,8 +18,7 @@ debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 dataname = "/CSVFile.csv"
-backfile = appdir + "/save.txt"
-datafile = backfile
+datafile = appdir + "/save.txt"
 datadir = appdir
 templatefile = appdir + "/sleep_templ.htm"
 resultfile = appdir + "/sleep.htm"
@@ -171,7 +168,7 @@ def create_month_info() :
 def month_info_table() :
     for dt in month_info_list :
         yymm = dt[0]
-        yy = yymm.year
+        yy = yymm.year - 2000
         mon = yymm.month
         sleep  = int(dt[1])
         max_sleep  = int(dt[2])
@@ -183,7 +180,7 @@ def month_info_table() :
         max_end  = dt[8].time()
         min_end  = dt[9].time()
         #print(yy,mm,sleep,start,end)
-        out.write(f'<tr><td>{yy}/{mon}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
+        out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
                   f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
                   f'<td>{start.hour}:{start.minute:02}</td>'
