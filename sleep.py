@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.03"       # 24/06/05
+version = "1.04"       # 24/06/06
 
 # TODO:  pixela
 
@@ -104,16 +104,16 @@ def month_graph() :
         #out.write(f"['{str_date}',{row['sleep']}],")
 
 def start_time_graph() :
-    for index , row in df.tail(30).iterrows() :    
-        str_date = index.strftime("%d")
+    for index , row in df.tail(90).iterrows() :    
+        str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
         hh  = row['start'].strftime("%H")
         mm  = row['start'].strftime("%M")
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 def end_time_graph() :
-    for index , row in df.tail(30).iterrows() :    
-        str_date = index.strftime("%d")
+    for index , row in df.tail(90).iterrows() :    
+        str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
         hh  = row['end'].strftime("%H")
         mm  = row['end'].strftime("%M")
         #print(str_date,hh,mm)
