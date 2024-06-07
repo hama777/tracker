@@ -1,7 +1,7 @@
 <html>
-    <!-- 24/05/30 -->
+    <!-- 24/06/07 -->
     <head>
-        <title>Tracker List</title>
+        <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta http-equiv="Content-Style-Type" content="text/css">
         <link rel="stylesheet" href="tracker.css">
@@ -111,7 +111,7 @@
 </script>
 
 <body>
-        <h1>Tracker List</h1>
+        <h1>Sleep Time</h1>
         <span style="font-size:12px;">Ver : %version%</span>
         <span style="font-size:12px;">実行日時   : %today%</span>
 
@@ -129,6 +129,11 @@
         <div id="end_time_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>月別睡眠時間グラフ</h2>
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <h2>日別睡眠時間ランキング</h2>
+        <table>
+            <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+            %rank_sleep% 
+        </table>
 
     </body>
 </html>
