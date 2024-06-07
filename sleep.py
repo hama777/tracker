@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.04"       # 24/06/06
+version = "1.05"       # 24/06/07
 
 # TODO:  pixela
 
@@ -46,7 +46,6 @@ def main_proc():
     ftp_url = ftp_url.replace("index.htm","sleep.htm")
     read_data()
     create_month_info()
-    #month_info_table()
     parse_template()
 
     ftp_upload()
@@ -119,6 +118,19 @@ def end_time_graph() :
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
+def ranking_sleep_time() :
+    sort_df = df.copy()
+    sort_df = sort_df.sort_values('sleep',ascending=False)
+    print(sort_df.head(10))
+    i = 0 
+    for index , row in sort_df.head(10).iterrows() :  
+        i = i + 1 
+        str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
+        stime = int(row['sleep'])
+        hh = int(stime / 60)
+        mm = stime % 60
+        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
+    
 
 # 月ごとの情報 month_info_list を作成する
 # month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
@@ -247,8 +259,8 @@ def parse_template() :
         if "%month_info%" in line :
             month_info_table()
             continue
-        if "%ranking%" in line :
-            ranking()
+        if "%rank_sleep% " in line :
+            ranking_sleep_time()
             continue
         if "%ranking_month%" in line :
             ranking_month()
