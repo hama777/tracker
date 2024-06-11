@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.05"       # 24/06/07
+version = "1.06"       # 24/06/11
 
 # TODO:  pixela
 
@@ -118,10 +118,17 @@ def end_time_graph() :
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
-def ranking_sleep_time() :
+def ranking_sleep_time_max() :
     sort_df = df.copy()
     sort_df = sort_df.sort_values('sleep',ascending=False)
-    print(sort_df.head(10))
+    ranking_sleep_time_com(sort_df)
+
+def ranking_sleep_time_min() :
+    sort_df = df.copy()
+    sort_df = sort_df.sort_values('sleep',ascending=True)
+    ranking_sleep_time_com(sort_df)
+
+def ranking_sleep_time_com(sort_df) :
     i = 0 
     for index , row in sort_df.head(10).iterrows() :  
         i = i + 1 
@@ -259,8 +266,11 @@ def parse_template() :
         if "%month_info%" in line :
             month_info_table()
             continue
-        if "%rank_sleep% " in line :
-            ranking_sleep_time()
+        if "%rank_sleep_max% " in line :
+            ranking_sleep_time_max()
+            continue
+        if "%rank_sleep_min% " in line :
+            ranking_sleep_time_min()
             continue
         if "%ranking_month%" in line :
             ranking_month()
