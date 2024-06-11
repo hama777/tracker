@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/06/07 -->
+    <!-- 24/06/11 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -130,10 +130,21 @@
         <h2>月別睡眠時間グラフ</h2>
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>日別睡眠時間ランキング</h2>
-        <table>
-            <tr><th>順位</th><th>時間</th><th>日付</th></tr>
-            %rank_sleep% 
-        </table>
+        <div class="flex">
+            <div class='frame'>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %rank_sleep_max% 
+                </table>
+            </div>
+            <div class='frame'>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %rank_sleep_min% 
+                </table>
+            </div>
+        </div>    
+
 
     </body>
 </html>
