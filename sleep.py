@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.06"       # 24/06/11
+version = "1.07"       # 24/06/17
 
 # TODO:  pixela
 
@@ -133,6 +133,9 @@ def ranking_sleep_time_com(sort_df) :
     for index , row in sort_df.head(10).iterrows() :  
         i = i + 1 
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
+        if index.date() == lastdate :      # 最終データなら赤字にする
+            str_date = f'<span class=red>{str_date}</span>'
+
         stime = int(row['sleep'])
         hh = int(stime / 60)
         mm = stime % 60
@@ -208,13 +211,13 @@ def month_info_table() :
                   f'<td>{max_end.hour}:{max_end.minute:02}</td><td>{min_end.hour}:{min_end.minute:02}</td></tr>\n')
 
 def date_settings():
-    global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
+    global  today_date,today_mm,today_dd,today_yy,lastdate,today_datetime
     today_datetime = datetime.datetime.today()
     today_date = datetime.date.today()
     today_mm = today_date.month
     today_dd = today_date.day
     today_yy = today_date.year
-    yesterday = today_date - timedelta(days=1)
+    lastdate = today_date - timedelta(days=1)
 
 
 def conv_hhmm_mm(hhmm) :
