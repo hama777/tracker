@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.07"       # 24/06/17
+version = "1.08"       # 24/06/18
 
 # TODO:  pixela
 
@@ -156,9 +156,11 @@ def create_month_info() :
     min_sleep = []
     min_start = []
     min_end = []
+    std_sleep = []
     m_ave = df.resample(rule = "ME").mean().to_dict()
     m_max = df.resample(rule = "ME").max().to_dict()
     m_min = df.resample(rule = "ME").min().to_dict()
+    m_std = df.resample(rule = "ME").min().to_dict()
     for d, tm in m_ave['sleep'].items():
         yymm_list.append(d)
         sleep_list.append(tm)
@@ -178,11 +180,13 @@ def create_month_info() :
         min_start.append(tm)
     for _, tm in m_min['end'].items():
         min_end.append(tm)
+    for _, tm in m_std['sleep'].items():
+        std_sleep.append(tm)
 
-    for yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e in zip(yymm_list,sleep_list,max_sleep,min_sleep,
+    for yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_s in zip(yymm_list,sleep_list,max_sleep,min_sleep,
                                         start_list,max_start,min_start,
-                                        end_list,max_end,min_end  ) :
-        mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e]
+                                        end_list,max_end,min_end,std_sleep  ) :
+        mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_s]
         month_info_list.append(mlist)
 
     #print(month_info_list)
@@ -201,8 +205,10 @@ def month_info_table() :
         end  = dt[7].time()
         max_end  = dt[8].time()
         min_end  = dt[9].time()
-        #print(yy,mm,sleep,start,end)
+        std_sleep =  dt[10]
+        #print(yy,mon,std_sleep)
         out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
+                  f'<td  align="right">{std_sleep}</td>'
                   f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
                   f'<td>{start.hour}:{start.minute:02}</td>'
