@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.08"       # 24/06/18
+version = "1.09"       # 24/06/19
 
 # TODO:  pixela
 
@@ -50,31 +50,39 @@ def main_proc():
 
     ftp_upload()
 
+#   df の作成
+#   df の形式   date  起床基準の日付  date型   start 起床時刻  datetime型  end 就寝時刻  sleep 睡眠時間  
+#   就寝時刻12時超に対応するため start end は 0:00 基準の分単位で持つ  ex.  24:10 なら  24*60+10 = 1450
 def read_data():
     global df
 
     date_start = []
     date_end = []
-    process_list = []
+    sleep_list = []
     index_date_list = []
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
             if row[0] == "睡眠" :
-                tt = row[1][11:]     #  時刻部分のみ取り出す  ex. 23:26:00
-                date_start.append(tt)
-                tt = row[2][11:]
-                date_end.append(tt)
+                hh = int(row[1][11:13])     #  時刻部分のみ取り出す  ex. 23:26:00
+                mm = int(row[1][14:])
+                hhmm = hh * 60 + mm
+                #print(hhmm)
+                date_start.append(hhmm)
+                hh = int(row[2][11:13])
+                mm = int(row[2][14:])
+                hhmm = hh * 60 + mm
+                date_end.append(hhmm)
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
-                process_list.append(tt)
+                sleep_list.append(tt)
                 s = row[2][0:10]   # 先頭の日付部分のみ取り出す  ex. 2024-01-02
                 index_date_list.append(s)
 
-    df = pd.DataFrame(list(zip(index_date_list,date_start,date_end,process_list)), 
+    df = pd.DataFrame(list(zip(index_date_list,date_start,date_end,sleep_list)), 
                       columns = ['date','start','end','sleep'])
-    df["start"] = pd.to_datetime(df["start"])
-    df["end"] = pd.to_datetime(df["end"])
+    #df["start"] = pd.to_datetime(df["start"])
+    #df["end"] = pd.to_datetime(df["end"])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
 
@@ -105,16 +113,19 @@ def month_graph() :
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        hh  = row['start'].strftime("%H")
-        mm  = row['start'].strftime("%M")
-        #print(str_date,hh,mm)
+        #hh  = row['start'].strftime("%H")
+        #mm  = row['start'].strftime("%M")
+        hh  = row['start'] // 60 
+        mm  = row['start'] % 60 
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 def end_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        hh  = row['end'].strftime("%H")
-        mm  = row['end'].strftime("%M")
+        #hh  = row['end'].strftime("%H")
+        #mm  = row['end'].strftime("%M")
+        hh  = row['end'] // 60 
+        mm  = row['end'] % 60 
         #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
@@ -157,6 +168,8 @@ def create_month_info() :
     min_start = []
     min_end = []
     std_sleep = []
+    std_start = []
+    std_end = []
     m_ave = df.resample(rule = "ME").mean().to_dict()
     m_max = df.resample(rule = "ME").max().to_dict()
     m_min = df.resample(rule = "ME").min().to_dict()
@@ -182,11 +195,15 @@ def create_month_info() :
         min_end.append(tm)
     for _, tm in m_std['sleep'].items():
         std_sleep.append(tm)
+    for _, tm in m_std['start'].items():
+        std_start.append(tm)
+    for _, tm in m_std['end'].items():
+        std_end.append(tm)
 
-    for yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_s in zip(yymm_list,sleep_list,max_sleep,min_sleep,
+    for yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_sp,std_s,std_e in zip(yymm_list,sleep_list,max_sleep,min_sleep,
                                         start_list,max_start,min_start,
-                                        end_list,max_end,min_end,std_sleep  ) :
-        mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_s]
+                                        end_list,max_end,min_end,std_sleep,std_start,std_end  ) :
+        mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_sp,std_s,std_e]
         month_info_list.append(mlist)
 
     #print(month_info_list)
@@ -199,22 +216,33 @@ def month_info_table() :
         sleep  = int(dt[1])
         max_sleep  = int(dt[2])
         min_sleep  = int(dt[3])
-        start  = dt[4].time()
-        max_start  = dt[5].time()
-        min_start  = dt[6].time()
-        end  = dt[7].time()
-        max_end  = dt[8].time()
-        min_end  = dt[9].time()
+        start  = conv_time_to_str(dt[4])
+        max_start  = conv_time_to_str(dt[5])
+        min_start  = conv_time_to_str(dt[6])
+        end  = conv_time_to_str(dt[7])
+        max_end  = conv_time_to_str(dt[8])
+        min_end  = conv_time_to_str(dt[9])
         std_sleep =  dt[10]
+        std_start =  dt[11]
+        std_end =  dt[12]
         #print(yy,mon,std_sleep)
         out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
                   f'<td  align="right">{std_sleep}</td>'
                   f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
-                  f'<td>{start.hour}:{start.minute:02}</td>'
-                  f'<td>{max_start.hour}:{max_start.minute:02}</td><td>{min_start.hour}:{min_start.minute:02}</td>'
-                  f'<td>{end.hour}:{end.minute:02}</td>'
-                  f'<td>{max_end.hour}:{max_end.minute:02}</td><td>{min_end.hour}:{min_end.minute:02}</td></tr>\n')
+                  f'<td>{start}</td>'
+                  f'<td  align="right">{std_start}</td>'
+                  f'<td>{max_start}</td><td>{min_start}</td>'
+                  f'<td>{end}</td>'
+                  f'<td  align="right">{std_end}</td>'
+                  f'<td>{max_end}</td><td>{min_end}</td></tr>\n')
+
+def conv_time_to_str(timedata) :
+    hh = int(timedata) // 60
+    mm = int(timedata) % 60
+    s = f'{hh}:{mm:02}'
+    return s
+
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,lastdate,today_datetime
