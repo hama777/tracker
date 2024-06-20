@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.09"       # 24/06/19
+version = "1.10"       # 24/06/20
 
 # TODO:  pixela
 
@@ -51,7 +51,7 @@ def main_proc():
     ftp_upload()
 
 #   df の作成
-#   df の形式   date  起床基準の日付  date型   start 起床時刻  datetime型  end 就寝時刻  sleep 睡眠時間  
+#   df の形式   date  起床基準の日付  date型   start 数値 分単位  end 就寝時刻 分単位  sleep 睡眠時間  
 #   就寝時刻12時超に対応するため start end は 0:00 基準の分単位で持つ  ex.  24:10 なら  24*60+10 = 1450
 def read_data():
     global df
@@ -64,15 +64,17 @@ def read_data():
         reader = csv.reader(f)
         for row in reader:
             if row[0] == "睡眠" :
-                hh = int(row[1][11:13])     #  時刻部分のみ取り出す  ex. 23:26:00
-                mm = int(row[1][14:])
-                hhmm = hh * 60 + mm
+                #hh = int(row[1][11:13])     #  時刻部分のみ取り出す  ex. 23:26:00
+                #mm = int(row[1][14:])
+                #hhmm = hh * 60 + mm
                 #print(hhmm)
-                date_start.append(hhmm)
-                hh = int(row[2][11:13])
-                mm = int(row[2][14:])
-                hhmm = hh * 60 + mm
-                date_end.append(hhmm)
+                t = conv_datetime_to_minute(row[1])
+                date_start.append(t)
+                #hh = int(row[2][11:13])
+                #mm = int(row[2][14:])
+                #hhmm = hh * 60 + mm
+                t = conv_datetime_to_minute(row[2])
+                date_end.append(t)
                 tt = row[3].replace("'","")
                 tt = conv_hhmm_mm(tt) 
                 sleep_list.append(tt)
@@ -87,6 +89,12 @@ def read_data():
     df = df.set_index("date")
 
     #print(df)
+
+#  yyyy-mm-dd hh:mm 形式(str型)を分単位の数値に変換する
+def conv_datetime_to_minute(dt) :
+    hh = int(dt[11:13])   # hh 部分を取り出す
+    mm = int(dt[14:])     # mm 部分を取り出す
+    return hh * 60 + mm
 
 def daily_graph() :
     #print(df.tail(30))
@@ -108,13 +116,10 @@ def month_graph() :
         mon = yymm.month
 
         out.write(f"['{yy}/{mon}',{tm}],")
-        #out.write(f"['{str_date}',{row['sleep']}],")
 
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        #hh  = row['start'].strftime("%H")
-        #mm  = row['start'].strftime("%M")
         hh  = row['start'] // 60 
         mm  = row['start'] % 60 
         out.write(f"['{str_date}',[{hh},{mm},0]],")
@@ -122,11 +127,8 @@ def start_time_graph() :
 def end_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        #hh  = row['end'].strftime("%H")
-        #mm  = row['end'].strftime("%M")
         hh  = row['end'] // 60 
         mm  = row['end'] % 60 
-        #print(str_date,hh,mm)
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 def ranking_sleep_time_max() :
