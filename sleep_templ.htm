@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/06/19 -->
+    <!-- 24/06/21 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -117,7 +117,7 @@
 
         <h2>月別情報</h2>
         <table>
-            <tr><th>月</th><th>平均(時)</th><th>標準偏差</th><th>最大</th><th>最小</th><th>就寝</th><th>標準偏差</th><th>最大</th>
+            <tr><th>月</th><th>平均(時)</th><th>標準偏差</th><th>最長</th><th>最短</th><th>就寝</th><th>標準偏差</th><th>最大</th>
             <th>最小</th><th>起床</th><th>標準偏差</th><th>最大</th><th>最小</th></tr>
             %month_info% 
         </table>
@@ -132,12 +132,14 @@
         <h2>日別睡眠時間ランキング</h2>
         <div class="flex">
             <div class='frame'>
+                <span style="margin-left: 30px;">最長時間</span>
                 <table class="rank">
                     <tr><th>順位</th><th>時間</th><th>日付</th></tr>
                     %rank_sleep_max% 
                 </table>
             </div>
             <div class='frame'>
+                <span style="margin-left: 30px;">最短時間</span>
                 <table class="rank">
                     <tr><th>順位</th><th>時間</th><th>日付</th></tr>
                     %rank_sleep_min% 
