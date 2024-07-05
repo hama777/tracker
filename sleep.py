@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.10"       # 24/06/20
+version = "1.11"       # 24/07/05
 
 # TODO:  pixela
 
@@ -64,15 +64,8 @@ def read_data():
         reader = csv.reader(f)
         for row in reader:
             if row[0] == "睡眠" :
-                #hh = int(row[1][11:13])     #  時刻部分のみ取り出す  ex. 23:26:00
-                #mm = int(row[1][14:])
-                #hhmm = hh * 60 + mm
-                #print(hhmm)
                 t = conv_datetime_to_minute(row[1])
                 date_start.append(t)
-                #hh = int(row[2][11:13])
-                #mm = int(row[2][14:])
-                #hhmm = hh * 60 + mm
                 t = conv_datetime_to_minute(row[2])
                 date_end.append(t)
                 tt = row[3].replace("'","")
@@ -83,12 +76,8 @@ def read_data():
 
     df = pd.DataFrame(list(zip(index_date_list,date_start,date_end,sleep_list)), 
                       columns = ['date','start','end','sleep'])
-    #df["start"] = pd.to_datetime(df["start"])
-    #df["end"] = pd.to_datetime(df["end"])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-
-    #print(df)
 
 #  yyyy-mm-dd hh:mm 形式(str型)を分単位の数値に変換する
 def conv_datetime_to_minute(dt) :
@@ -105,7 +94,6 @@ def daily_graph() :
         mm = stime % 60
 
         out.write(f"['{str_date}',[{hh},{mm},0]],")
-        #out.write(f"['{str_date}',{row['sleep']}],")
 
 def month_graph() :
     #print(df.tail(30))
@@ -230,14 +218,14 @@ def month_info_table() :
         #print(yy,mon,std_sleep)
         out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
                   f'<td  align="right">{std_sleep}</td>'
-                  f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
-                  f'<td>{start}</td>'
+                  f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
+                  f'<td  align="right">{start}</td>'
                   f'<td  align="right">{std_start}</td>'
-                  f'<td>{max_start}</td><td>{min_start}</td>'
-                  f'<td>{end}</td>'
+                  f'<td>{min_start}</td><td>{max_start}</td>'
+                  f'<td  align="right">{end}</td>'
                   f'<td  align="right">{std_end}</td>'
-                  f'<td>{max_end}</td><td>{min_end}</td></tr>\n')
+                  f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
 
 def conv_time_to_str(timedata) :
     hh = int(timedata) // 60
