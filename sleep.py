@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.11"       # 24/07/05
+version = "1.12"       # 24/07/17
 
 # TODO:  pixela
 
@@ -226,6 +226,29 @@ def month_info_table() :
                   f'<td  align="right">{end}</td>'
                   f'<td  align="right">{std_end}</td>'
                   f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
+    all_statistics()
+
+def all_statistics() :
+    sleep_ave = int(df['sleep'].mean())
+    min_sleep = df['sleep'].min()
+    max_sleep = df['sleep'].max()
+    start  = conv_time_to_str(int(df['start'].mean()))
+    min_start = conv_time_to_str(df['start'].min())
+    max_start = conv_time_to_str(df['start'].max())
+    end  = conv_time_to_str(int(df['end'].mean()))
+    min_end  = conv_time_to_str(df['end'].min())
+    max_end  = conv_time_to_str(df['end'].max())
+    print(sleep_ave)
+    out.write(f'<tr><td>全体</td><td  align="right">{sleep_ave//60}:{sleep_ave%60:02}</td>'
+              f'<td  align="right">--</td>'
+              f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
+              f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
+              f'<td  align="right">{start}</td>'
+              f'<td  align="right">--</td>'
+              f'<td>{min_start}</td><td>{max_start}</td>'
+              f'<td  align="right">{end}</td>'
+              f'<td  align="right">--</td>'
+              f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
 
 def conv_time_to_str(timedata) :
     hh = int(timedata) // 60
