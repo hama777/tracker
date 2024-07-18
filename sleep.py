@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.12"       # 24/07/17
+version = "1.13"       # 24/07/18
 
 # TODO:  pixela
 
@@ -24,7 +24,7 @@ templatefile = appdir + "/sleep_templ.htm"
 resultfile = appdir + "/sleep.htm"
 conffile = appdir + "/tracker.conf"
 logfile = appdir + "\\tracker.log"
-pastdata = appdir + "/pastdata.txt"
+pastdata = appdir + "/sleeppast.txt"
 rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
 month_info_list = []   # 月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
@@ -45,6 +45,7 @@ def main_proc():
     read_config()
     ftp_url = ftp_url.replace("index.htm","sleep.htm")
     read_data()
+    read_pastdata()
     create_month_info()
     parse_template()
 
@@ -84,6 +85,12 @@ def conv_datetime_to_minute(dt) :
     hh = int(dt[11:13])   # hh 部分を取り出す
     mm = int(dt[14:])     # mm 部分を取り出す
     return hh * 60 + mm
+
+def read_pastdata():
+    global df_past
+
+    df_past = pd.read_csv(pastdata,  sep='\t')
+    print(df_past)
 
 def daily_graph() :
     #print(df.tail(30))
