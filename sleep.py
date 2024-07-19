@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.13"       # 24/07/18
+version = "1.14"       # 24/07/19
 
 # TODO:  pixela
 
@@ -90,10 +90,9 @@ def read_pastdata():
     global df_past
 
     df_past = pd.read_csv(pastdata,  sep='\t')
-    print(df_past)
+    #print(df_past)
 
 def daily_graph() :
-    #print(df.tail(30))
     for index , row in df.tail(30).iterrows() :    
         str_date = index.strftime("%d")
         stime = int(row['sleep'])
@@ -103,14 +102,22 @@ def daily_graph() :
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 def month_graph() :
-    #print(df.tail(30))
+    for index , row in df_past.iterrows() :  
+        yy = int(row['yymm'].split("/")[0]) - 2000
+        mon = int(row['yymm'].split("/")[1]) 
+        hh = int(row['sleep_ave'].split(":")[0])
+        mm = int(row['sleep_ave'].split(":")[1])
+        tm = hh * 60 + mm 
+        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+
     for dt in month_info_list :    
         yymm = dt[0]
         tm = dt[1]
-        yy = yymm.year
+        hh = int(tm) // 60
+        mm = int(tm) % 60
+        yy = yymm.year - 2000
         mon = yymm.month
-
-        out.write(f"['{yy}/{mon}',{tm}],")
+        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
 
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
@@ -331,12 +338,6 @@ def parse_template() :
             continue
         if "%ranking_month%" in line :
             ranking_month()
-            continue
-        if "%month_graph%" in line :
-            month_graph_com(df_mon_pf)
-            continue
-        if "%month_graph_vn%" in line :
-            month_graph_com(df_mon_vn)
             continue
         if "%year_graph_pf%" in line :
             year_graph_com(df_yy_pf)
