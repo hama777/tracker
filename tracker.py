@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.09"       # 24/04/17
+version = "2.10"       # 24/07/22
 
 # TODO:  pixela
 
@@ -109,7 +109,7 @@ def read_data():
     #print(df_vn)
 
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd を作成する
-#   df_dd は ptime が 0 の日(データ)も含む
+#   df_dd は ptime が 0 の日(データ)も含む     date は 2024年1月1日から実行前日まで
 def totalling_daily_data() :
     global df_dd
 
@@ -339,6 +339,20 @@ def month_info()  :
                   f'<td align="right">{vave:5.1f}</td><td align="right">{vmax//60}:{vmax%60:02}</td>'
                   f'<td align="right">{vzero}</td>'
                   f'<td align="right">{vzero/td * 100:5.2f}</td></tr>\n')
+    all_statistics()
+
+def all_statistics() :
+    pf_ave = df_dd['ptime'].mean()
+    vn_ave = df_dd['vtime'].mean()
+    #print(pf_ave,vn_ave)
+    out.write(f'<tr><td align="right">全体</td><td align="right">--</td>'
+                f'<td align="right">{pf_ave:5.1f}</td><td align="right">--</td>'
+                f'<td align="right">--</td>'
+                f'<td align="right">--</td>'
+                f'<td align="right">--</td>'
+                f'<td align="right">{vn_ave:5.1f}</td><td align="right">--</td>'
+                f'<td align="right">--</td>'
+                f'<td align="right">--</td></tr>\n')
 
 #   月ごとの時間グラフ
 def month_graph_com(df_mon) :
