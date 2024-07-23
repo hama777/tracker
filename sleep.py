@@ -10,7 +10,7 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 
-version = "1.14"       # 24/07/19
+version = "1.15"       # 24/07/23
 
 # TODO:  pixela
 
@@ -253,16 +253,16 @@ def all_statistics() :
     min_end  = conv_time_to_str(df['end'].min())
     max_end  = conv_time_to_str(df['end'].max())
     print(sleep_ave)
-    out.write(f'<tr><td>全体</td><td  align="right">{sleep_ave//60}:{sleep_ave%60:02}</td>'
-              f'<td  align="right">--</td>'
-              f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
-              f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
-              f'<td  align="right">{start}</td>'
-              f'<td  align="right">--</td>'
-              f'<td>{min_start}</td><td>{max_start}</td>'
-              f'<td  align="right">{end}</td>'
-              f'<td  align="right">--</td>'
-              f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
+    out.write(f'<tr><td class=all>全体</td><td class=all align="right">{sleep_ave//60}:{sleep_ave%60:02}</td>'
+              f'<td class=all align="right">--</td>'
+              f'<td class=all align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
+              f'<td class=all align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
+              f'<td class=all align="right">{start}</td>'
+              f'<td class=all align="right">--</td>'
+              f'<td class=all>{min_start}</td><td class=all>{max_start}</td>'
+              f'<td class=all align="right">{end}</td>'
+              f'<td class=all align="right">--</td>'
+              f'<td class=all>{min_end}</td><td class=all>{max_end}</td></tr>\n')
 
 def conv_time_to_str(timedata) :
     hh = int(timedata) // 60
