@@ -38,6 +38,9 @@ th {
 tr { 
     background-color : #ffffff;
 }
+td.all { 
+    background-color : #f5d5d9;
+}
 tr:nth-child(2n+1) { 
     background-color : #e8dff2;
 }
