@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.10"       # 24/07/22
+version = "2.11"       # 24/07/23
 
 # TODO:  pixela
 
@@ -345,14 +345,14 @@ def all_statistics() :
     pf_ave = df_dd['ptime'].mean()
     vn_ave = df_dd['vtime'].mean()
     #print(pf_ave,vn_ave)
-    out.write(f'<tr><td align="right">全体</td><td align="right">--</td>'
-                f'<td align="right">{pf_ave:5.1f}</td><td align="right">--</td>'
-                f'<td align="right">--</td>'
-                f'<td align="right">--</td>'
-                f'<td align="right">--</td>'
-                f'<td align="right">{vn_ave:5.1f}</td><td align="right">--</td>'
-                f'<td align="right">--</td>'
-                f'<td align="right">--</td></tr>\n')
+    out.write(f'<tr><td class=all>全体</td><td class=all align="right">--</td>'
+                f'<td class=all align="right">{pf_ave:5.1f}</td><td class=all align="right">--</td>'
+                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">{vn_ave:5.1f}</td><td class=all align="right">--</td>'
+                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">--</td></tr>\n')
 
 #   月ごとの時間グラフ
 def month_graph_com(df_mon) :
