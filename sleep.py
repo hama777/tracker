@@ -9,8 +9,9 @@ import pandas as pd
 import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
+import math
 
-version = "1.15"       # 24/07/23
+version = "1.16"       # 24/07/24
 
 # TODO:  pixela
 
@@ -118,6 +119,23 @@ def month_graph() :
         yy = yymm.year - 2000
         mon = yymm.month
         out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+
+#   月別平均就寝時刻グラフ
+def month_start_time_graph() :
+    for index , row in df_past.iterrows() :  
+        if type(row['start_ave']) is not str :
+            continue 
+        yy = int(row['yymm'].split("/")[0]) - 2000
+        mon = int(row['yymm'].split("/")[1]) 
+        print(row['start_ave'])
+        hh = int(row['start_ave'].split(":")[0])
+        mm = int(row['start_ave'].split(":")[1])
+        if hh < 8 :
+            hh = hh + 24
+        tm = hh * 60 + mm 
+        #print(f"['{yy}/{mon}',[{hh},{mm},0]],")
+        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+
 
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
@@ -314,6 +332,9 @@ def parse_template() :
             continue
         if "%month_graph%" in line :
             month_graph()
+            continue
+        if "%month_start_graph%" in line :
+            month_start_time_graph()
             continue
         if "%start_time_graph%" in line :
             start_time_graph()
