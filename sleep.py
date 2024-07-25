@@ -11,7 +11,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
 
-version = "1.16"       # 24/07/24
+version = "1.17"       # 24/07/25
 
 # TODO:  pixela
 
@@ -102,6 +102,7 @@ def daily_graph() :
 
         out.write(f"['{str_date}',[{hh},{mm},0]],")
 
+#   月別平均睡眠時間グラフ
 def month_graph() :
     for index , row in df_past.iterrows() :  
         yy = int(row['yymm'].split("/")[0]) - 2000
@@ -109,7 +110,7 @@ def month_graph() :
         hh = int(row['sleep_ave'].split(":")[0])
         mm = int(row['sleep_ave'].split(":")[1])
         tm = hh * 60 + mm 
-        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
 
     for dt in month_info_list :    
         yymm = dt[0]
@@ -118,7 +119,7 @@ def month_graph() :
         mm = int(tm) % 60
         yy = yymm.year - 2000
         mon = yymm.month
-        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
 
 #   月別平均就寝時刻グラフ
 def month_start_time_graph() :
@@ -127,14 +128,21 @@ def month_start_time_graph() :
             continue 
         yy = int(row['yymm'].split("/")[0]) - 2000
         mon = int(row['yymm'].split("/")[1]) 
-        print(row['start_ave'])
         hh = int(row['start_ave'].split(":")[0])
         mm = int(row['start_ave'].split(":")[1])
         if hh < 8 :
             hh = hh + 24
         tm = hh * 60 + mm 
-        #print(f"['{yy}/{mon}',[{hh},{mm},0]],")
-        out.write(f"['{yy}/{mon}',[{hh},{mm},0]],")
+        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
+
+    for dt in month_info_list :
+        yymm = dt[0]
+        yy = yymm.year - 2000
+        mon = yymm.month
+        start  = dt[4]
+        hh  = start // 60 
+        mm  = start % 60 
+        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
 
 
 def start_time_graph() :
@@ -270,7 +278,6 @@ def all_statistics() :
     end  = conv_time_to_str(int(df['end'].mean()))
     min_end  = conv_time_to_str(df['end'].min())
     max_end  = conv_time_to_str(df['end'].max())
-    print(sleep_ave)
     out.write(f'<tr><td class=all>全体</td><td class=all align="right">{sleep_ave//60}:{sleep_ave%60:02}</td>'
               f'<td class=all align="right">--</td>'
               f'<td class=all align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
