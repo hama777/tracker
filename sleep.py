@@ -11,7 +11,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
 
-version = "1.17"       # 24/07/25
+version = "1.18"       # 24/07/26
 
 # TODO:  pixela
 
@@ -139,25 +139,44 @@ def month_start_time_graph() :
         yymm = dt[0]
         yy = yymm.year - 2000
         mon = yymm.month
-        start  = dt[4]
+        #start  = dt[4]        # 月平均就寝時刻
+        #hh  = start // 60 
+        #mm  = start % 60 
+        out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[4])}]],")   # dt[4] = 月平均就寝時刻
+
+#   月別平均起床時刻グラフ
+def month_end_time_graph() :
+    for index , row in df_past.iterrows() :  
+        if type(row['end_ave']) is not str :
+            continue 
+        yy = int(row['yymm'].split("/")[0]) - 2000
+        mon = int(row['yymm'].split("/")[1]) 
+        hh = int(row['end_ave'].split(":")[0])
+        mm = int(row['end_ave'].split(":")[1])
+        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
+
+    for dt in month_info_list :
+        yymm = dt[0]
+        yy = yymm.year - 2000
+        mon = yymm.month
+        start  = dt[7]             # 月平均起床時刻
         hh  = start // 60 
         mm  = start % 60 
         out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
 
-
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        hh  = row['start'] // 60 
-        mm  = row['start'] % 60 
-        out.write(f"['{str_date}',[{hh},{mm},0]],")
+        #hh  = row['start'] // 60 
+        #mm  = row['start'] % 60 
+        out.write(f"['{str_date}',[{conv_time_to_graph_str(row['start'])}]],")
 
 def end_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        hh  = row['end'] // 60 
-        mm  = row['end'] % 60 
-        out.write(f"['{str_date}',[{hh},{mm},0]],")
+        #hh  = row['end'] // 60 
+        #mm  = row['end'] % 60 
+        out.write(f"['{str_date}',[{conv_time_to_graph_str(row['end'])}]],")
 
 def ranking_sleep_time_max() :
     sort_df = df.copy()
@@ -289,12 +308,19 @@ def all_statistics() :
               f'<td class=all align="right">--</td>'
               f'<td class=all>{min_end}</td><td class=all>{max_end}</td></tr>\n')
 
+#   時刻 int を形式 hh:mm の文字列に変換する
 def conv_time_to_str(timedata) :
     hh = int(timedata) // 60
     mm = int(timedata) % 60
     s = f'{hh}:{mm:02}'
     return s
 
+#   時刻 int をグラフ用の形式 hh,mm,0 の文字列に変換する
+def conv_time_to_graph_str(timedata) :
+    hh = int(timedata) // 60
+    mm = int(timedata) % 60
+    s = f'{hh},{mm},0'
+    return s
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,lastdate,today_datetime
@@ -343,17 +369,14 @@ def parse_template() :
         if "%month_start_graph%" in line :
             month_start_time_graph()
             continue
+        if "%month_end_graph%" in line :
+            month_end_time_graph()
+            continue
         if "%start_time_graph%" in line :
             start_time_graph()
             continue
         if "%end_time_graph%" in line :
             end_time_graph()
-            continue
-        if "%daily_movav%" in line :
-            daily_movav_com(0)
-            continue
-        if "%daily_movav_vn%" in line :
-            daily_movav_com(1)
             continue
         if "%month_info%" in line :
             month_info_table()
@@ -363,15 +386,6 @@ def parse_template() :
             continue
         if "%rank_sleep_min% " in line :
             ranking_sleep_time_min()
-            continue
-        if "%ranking_month%" in line :
-            ranking_month()
-            continue
-        if "%year_graph_pf%" in line :
-            year_graph_com(df_yy_pf)
-            continue
-        if "%year_graph_vn%" in line :
-            year_graph_com(df_yy_vn)
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
