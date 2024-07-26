@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/07/24 -->
+    <!-- 24/07/26 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -136,6 +136,32 @@
     );
 </script>
 
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+    [       '', '時間'],
+%month_end_graph%
+            ]);
+    
+            var options = {
+                title: '月別時間',
+                colors: ['#a442f5'] ,
+                hAxis: {title: '日付'},
+                chartArea: { backgroundColor: '#e3d8ed' , left:50,right:30 },
+                backgroundColor: '#f1f8e9' ,
+                legend: {
+                    position: 'none'
+                }
+            };
+    
+            var chart = new google.visualization.LineChart(document.getElementById('month_end_graph'));
+            chart.draw(data, options);
+        }
+    );
+</script>
+
 <body>
         <h1>Sleep Time</h1>
         <span style="font-size:12px;">Ver : %version%</span>
@@ -162,6 +188,8 @@
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>月別平均就寝時刻グラフ</h2>
         <div id="month_start_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <h2>月別平均起床時刻グラフ</h2>
+        <div id="month_end_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>日別睡眠時間ランキング</h2>
         <div class="flex">
             <div class='frame'>
