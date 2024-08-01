@@ -11,7 +11,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
 
-version = "1.18"       # 24/07/26
+version = "1.19"       # 24/07/30
 
 # TODO:  pixela
 
@@ -89,18 +89,17 @@ def conv_datetime_to_minute(dt) :
 
 def read_pastdata():
     global df_past
-
     df_past = pd.read_csv(pastdata,  sep='\t')
-    #print(df_past)
 
 def daily_graph() :
     for index , row in df.tail(30).iterrows() :    
         str_date = index.strftime("%d")
         stime = int(row['sleep'])
-        hh = int(stime / 60)
-        mm = stime % 60
+        #hh = int(stime / 60)
+        #mm = stime % 60
 
-        out.write(f"['{str_date}',[{hh},{mm},0]],")
+        out.write(f"['{str_date}',[{conv_time_to_graph_str(stime)}]],")
+        #out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 #   月別平均睡眠時間グラフ
 def month_graph() :
@@ -114,12 +113,12 @@ def month_graph() :
 
     for dt in month_info_list :    
         yymm = dt[0]
-        tm = dt[1]
-        hh = int(tm) // 60
-        mm = int(tm) % 60
+        #tm = dt[1]
+        #hh = int(tm) // 60
+        #mm = int(tm) % 60
         yy = yymm.year - 2000
         mon = yymm.month
-        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
+        out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[1])}]],")
 
 #   月別平均就寝時刻グラフ
 def month_start_time_graph() :
@@ -159,23 +158,19 @@ def month_end_time_graph() :
         yymm = dt[0]
         yy = yymm.year - 2000
         mon = yymm.month
-        start  = dt[7]             # 月平均起床時刻
-        hh  = start // 60 
-        mm  = start % 60 
-        out.write(f"['{yy}{mon:02}',[{hh},{mm},0]],")
+        #start  = dt[7]             # 月平均起床時刻
+        #hh  = start // 60 
+        #mm  = start % 60 
+        out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[7])}]],")   # dt[7] 月平均起床時刻 
 
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        #hh  = row['start'] // 60 
-        #mm  = row['start'] % 60 
         out.write(f"['{str_date}',[{conv_time_to_graph_str(row['start'])}]],")
 
 def end_time_graph() :
     for index , row in df.tail(90).iterrows() :    
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
-        #hh  = row['end'] // 60 
-        #mm  = row['end'] % 60 
         out.write(f"['{str_date}',[{conv_time_to_graph_str(row['end'])}]],")
 
 def ranking_sleep_time_max() :
@@ -255,8 +250,6 @@ def create_month_info() :
         mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_sp,std_s,std_e]
         month_info_list.append(mlist)
 
-    #print(month_info_list)
-
 def month_info_table() :
     for dt in month_info_list :
         yymm = dt[0]
@@ -274,7 +267,6 @@ def month_info_table() :
         std_sleep =  dt[10]
         std_start =  dt[11]
         std_end =  dt[12]
-        #print(yy,mon,std_sleep)
         out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
                   f'<td  align="right">{std_sleep}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
