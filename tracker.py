@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.11"       # 24/07/23
+version = "2.12"       # 24/08/08
 
 # TODO:  pixela
 
@@ -329,7 +329,7 @@ def month_info()  :
         if mm  == today_mm :   #  今月なら 前日まで
             td = today_dd -1 
         else :
-            td = calendar.monthrange(yy, mm)[1] 
+            td = calendar.monthrange(yy, mm)[1]   # 月の日数を取得 (月の初日の曜日, 月の日数)のタプルを返す。
 
         out.write(f'<tr><td align="right">{yymm}</td><td align="right">{sum//60}:{sum%60:02}</td>'
                   f'<td align="right">{ave:5.1f}</td><td align="right">{max//60}:{max%60:02}</td>'
@@ -344,14 +344,23 @@ def month_info()  :
 def all_statistics() :
     pf_ave = df_dd['ptime'].mean()
     vn_ave = df_dd['vtime'].mean()
-    #print(pf_ave,vn_ave)
+
+    zero_day_p = 0 
+    zero_day_v = 0 
+    for item in month_data_list :
+        yymm,sum,ave,max,zero,vsum,vave,vmax,vzero = item
+        zero_day_p += zero
+        zero_day_v += vzero
+
+    #print(zero_day_p,zero_day_v)
+
     out.write(f'<tr><td class=all>全体</td><td class=all align="right">--</td>'
                 f'<td class=all align="right">{pf_ave:5.1f}</td><td class=all align="right">--</td>'
-                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">{zero_day_p}</td>'
                 f'<td class=all align="right">--</td>'
                 f'<td class=all align="right">--</td>'
                 f'<td class=all align="right">{vn_ave:5.1f}</td><td class=all align="right">--</td>'
-                f'<td class=all align="right">--</td>'
+                f'<td class=all align="right">{zero_day_v}</td>'
                 f'<td class=all align="right">--</td></tr>\n')
 
 #   月ごとの時間グラフ
