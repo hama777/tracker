@@ -12,9 +12,10 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.12"       # 24/08/08
+version = "2.13"       # 24/08/13
 
 # TODO:  pixela
+# TODO: month_data_list を dataframe にする
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -347,21 +348,28 @@ def all_statistics() :
 
     zero_day_p = 0 
     zero_day_v = 0 
+    max_p = 0
+    max_v = 0 
     for item in month_data_list :
         yymm,sum,ave,max,zero,vsum,vave,vmax,vzero = item
         zero_day_p += zero
         zero_day_v += vzero
+        if max > max_p :
+            max_p = max
+        if vmax > max_v :
+            max_v = vmax
 
-    #print(zero_day_p,zero_day_v)
+    from_dd  = datetime.date(year=2024, month=1, day=1)
+    td = today_date - from_dd
 
     out.write(f'<tr><td class=all>全体</td><td class=all align="right">--</td>'
-                f'<td class=all align="right">{pf_ave:5.1f}</td><td class=all align="right">--</td>'
+                f'<td class=all align="right">{pf_ave:5.1f}</td><td class=all align="right">{max_p//60}:{max_p%60:02}</td>'
                 f'<td class=all align="right">{zero_day_p}</td>'
+                f'<td class=all align="right">{zero_day_p*100/td.days:5.1f}</td>'
                 f'<td class=all align="right">--</td>'
-                f'<td class=all align="right">--</td>'
-                f'<td class=all align="right">{vn_ave:5.1f}</td><td class=all align="right">--</td>'
+                f'<td class=all align="right">{vn_ave:5.1f}</td><td class=all align="right">{max_v//60}:{max_v%60:02}</td>'
                 f'<td class=all align="right">{zero_day_v}</td>'
-                f'<td class=all align="right">--</td></tr>\n')
+                f'<td class=all align="right">{zero_day_v*100/td.days:5.1f}</td></tr>\n')
 
 #   月ごとの時間グラフ
 def month_graph_com(df_mon) :
