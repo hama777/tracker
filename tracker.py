@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.13"       # 24/08/13
+version = "2.14"       # 24/08/16
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
@@ -249,6 +249,7 @@ def read_pastdata():
     df_mon_vn = pd.DataFrame(list(zip(yymmvn_list,vn_list)), columns = ['yymm','time'])
     #print(df_mon_vn)
 
+#  hh:mm 形式の文字列を渡し、分単位に変換した数値を返す
 def conv_hhmm_mm(hhmm) :
     if hhmm == "" :
         return 0
@@ -318,6 +319,11 @@ def last_month_days() :
     last_month_end = this_month - datetime.timedelta(days=1)
     return(last_month_end.day)
 
+# 分単位の数値を渡し  hh:mm 形式の文字列を返す
+def minutes_to_hhmm(mm) :
+    hhmm = f'{mm//60}:{mm%60:02}'
+    return hhmm
+
 #   月別情報
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
@@ -332,12 +338,12 @@ def month_info()  :
         else :
             td = calendar.monthrange(yy, mm)[1]   # 月の日数を取得 (月の初日の曜日, 月の日数)のタプルを返す。
 
-        out.write(f'<tr><td align="right">{yymm}</td><td align="right">{sum//60}:{sum%60:02}</td>'
-                  f'<td align="right">{ave:5.1f}</td><td align="right">{max//60}:{max%60:02}</td>'
+        out.write(f'<tr><td align="right">{yymm}</td><td align="right">{minutes_to_hhmm(sum)}</td>'
+                  f'<td align="right">{ave:5.1f}</td><td align="right">{minutes_to_hhmm(max)}</td>'
                   f'<td align="right">{zero}</td>'
                   f'<td align="right">{zero/td * 100:5.2f}</td>'
-                  f'<td align="right">{vsum//60}:{sum%60:02}</td>'
-                  f'<td align="right">{vave:5.1f}</td><td align="right">{vmax//60}:{vmax%60:02}</td>'
+                  f'<td align="right">{minutes_to_hhmm(vsum)}</td>'
+                  f'<td align="right">{vave:5.1f}</td><td align="right">{minutes_to_hhmm(vmax)}</td>'
                   f'<td align="right">{vzero}</td>'
                   f'<td align="right">{vzero/td * 100:5.2f}</td></tr>\n')
     all_statistics()
@@ -363,13 +369,15 @@ def all_statistics() :
     td = today_date - from_dd
 
     out.write(f'<tr><td class=all>全体</td><td class=all align="right">--</td>'
-                f'<td class=all align="right">{pf_ave:5.1f}</td><td class=all align="right">{max_p//60}:{max_p%60:02}</td>'
+                f'<td class=all align="right">{pf_ave:5.1f}</td>'
+                f'<td class=all align="right">{minutes_to_hhmm(max_p)}</td>'
                 f'<td class=all align="right">{zero_day_p}</td>'
-                f'<td class=all align="right">{zero_day_p*100/td.days:5.1f}</td>'
+                f'<td class=all align="right">{zero_day_p*100/td.days:5.2f}</td>'
                 f'<td class=all align="right">--</td>'
-                f'<td class=all align="right">{vn_ave:5.1f}</td><td class=all align="right">{max_v//60}:{max_v%60:02}</td>'
+                f'<td class=all align="right">{vn_ave:5.1f}</td>'
+                f'<td class=all align="right">{minutes_to_hhmm(max_v)}</td>'
                 f'<td class=all align="right">{zero_day_v}</td>'
-                f'<td class=all align="right">{zero_day_v*100/td.days:5.1f}</td></tr>\n')
+                f'<td class=all align="right">{zero_day_v*100/td.days:5.2f}</td></tr>\n')
 
 #   月ごとの時間グラフ
 def month_graph_com(df_mon) :
