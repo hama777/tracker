@@ -1,0 +1,79 @@
+/*  コメント */
+table, td, th { 
+    font-family: "Meiryo UI" ; 
+    font-size: 14px; 
+    border: 1px #32a89d solid;  
+    border-collapse: collapse; 
+    padding: 3px; 
+    margin-left: 100px;
+}
+table.rank {
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+
+}
+h1{
+    text-align: center;
+    margin: 0 0 0.5em;
+    padding: 3px;
+    font-size: 20px ;
+    font-weight: bold;
+}
+h2{
+    margin: 0 0 0.5em;
+    padding: 3px;
+    border-top: 3px double #32a89d;
+    border-bottom: 3px double #32a89d;
+    font-size: 16px ;
+    font-weight: bold;
+}
+a { 
+    text-decoration: none; 
+}
+th { 
+    background-color :#6dd1c7;
+}
+tr { 
+    background-color : #ffffff;
+}
+td.all { 
+    background-color : #a8e6df;
+}
+tr:nth-child(2n+1) { 
+    background-color : #cfe6e3;
+}
+tr:hover  { 
+    background-color : #f4ffc9;
+}
+td.red  { 
+    color : #ff0000 ; 
+    font-weight : bold ;
+}
+td.right{ 
+    text-align: right;
+}
+.flex {
+    display: flex;
+}
+.frame { 
+    background:linear-gradient(#c4eaf5, #6dd1c7) ; 
+    margin-left: 3px; margin-top: 4px; margin-right: 3px; border: solid 1px #0000ff; 
+    border-radius: 10px; 
+}
+
+.heading-040 {
+    padding: .1em .7em;
+    border-top: 2px solid #5ba9f7;
+    border-bottom: 2px solid #5ba9f7;
+    background-image: linear-gradient(45deg, #5ba9f712 25%, transparent 25%, transparent 50%, #5ba9f712 50%, #5ba9f712 75%, transparent 75%, transparent), linear-gradient(-45deg, #5ba9f712 25%, transparent 25%, transparent 50%, #5ba9f712 50%, #5ba9f712 75%, transparent 75%, transparent);
+    background-color: #5ba9f70d;
+    background-size: 20px 20px;
+    color: #5ba9f7;
+}
+span.red {
+    color : red;
+}
+
+
