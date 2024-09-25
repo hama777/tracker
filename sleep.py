@@ -11,7 +11,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
 
-version = "1.19"       # 24/07/30
+version = "1.20"       # 24/09/25
 
 # TODO:  pixela
 
@@ -178,8 +178,18 @@ def ranking_sleep_time_max() :
     sort_df = sort_df.sort_values('sleep',ascending=False)
     ranking_sleep_time_com(sort_df)
 
+def ranking_sleep_time_30_max() :
+    sort_df = df.tail(30)
+    sort_df = sort_df.sort_values('sleep',ascending=False)
+    ranking_sleep_time_com(sort_df)
+
 def ranking_sleep_time_min() :
     sort_df = df.copy()
+    sort_df = sort_df.sort_values('sleep',ascending=True)
+    ranking_sleep_time_com(sort_df)
+
+def ranking_sleep_time_30_min() :
+    sort_df = df.tail(30)
     sort_df = sort_df.sort_values('sleep',ascending=True)
     ranking_sleep_time_com(sort_df)
 
@@ -376,8 +386,14 @@ def parse_template() :
         if "%rank_sleep_max% " in line :
             ranking_sleep_time_max()
             continue
+        if "%rank_sleep_30_max% " in line :
+            ranking_sleep_time_30_max()
+            continue
         if "%rank_sleep_min% " in line :
             ranking_sleep_time_min()
+            continue
+        if "%rank_sleep_30_min% " in line :
+            ranking_sleep_time_30_min()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
