@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/09/24 -->
+    <!-- 24/09/25 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -190,6 +190,7 @@
         <div id="month_start_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
         <h2>月別平均起床時刻グラフ</h2>
         <div id="month_end_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <br>
         <h2>日別睡眠時間ランキング</h2>
         <div class="flex">
             <div class='frame'>
@@ -206,6 +207,21 @@
                     %rank_sleep_min% 
                 </table>
             </div>
+            <div class='frame'>
+                <span style="margin-left: 20px;">30日最長時間</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %rank_sleep_30_max% 
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 20px;">30日最短時間</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>日付</th></tr>
+                    %rank_sleep_30_min% 
+                </table>
+            </div>
+
         </div>    
 
 
