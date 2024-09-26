@@ -11,7 +11,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
 
-version = "1.20"       # 24/09/25
+version = "1.21"       # 24/09/26
 
 # TODO:  pixela
 
@@ -227,7 +227,7 @@ def create_month_info() :
     m_ave = df.resample(rule = "ME").mean().to_dict()
     m_max = df.resample(rule = "ME").max().to_dict()
     m_min = df.resample(rule = "ME").min().to_dict()
-    m_std = df.resample(rule = "ME").min().to_dict()
+    m_std = df.resample(rule = "ME").std().to_dict()
     for d, tm in m_ave['sleep'].items():
         yymm_list.append(d)
         sleep_list.append(tm)
@@ -278,14 +278,14 @@ def month_info_table() :
         std_start =  dt[11]
         std_end =  dt[12]
         out.write(f'<tr><td>{yy}/{mon:02}</td><td  align="right">{sleep//60}:{sleep%60:02}</td>'
-                  f'<td  align="right">{std_sleep}</td>'
+                  f'<td  align="right">{std_sleep:5.2f}</td>'
                   f'<td  align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
                   f'<td  align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
                   f'<td  align="right">{start}</td>'
-                  f'<td  align="right">{std_start}</td>'
+                  f'<td  align="right">{std_start:5.2f}</td>'
                   f'<td>{min_start}</td><td>{max_start}</td>'
                   f'<td  align="right">{end}</td>'
-                  f'<td  align="right">{std_end}</td>'
+                  f'<td  align="right">{std_end:5.2f}</td>'
                   f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
     all_statistics()
 
