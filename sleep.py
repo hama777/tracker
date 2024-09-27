@@ -10,8 +10,9 @@ import locale
 from ftplib import FTP_TLS
 from datetime import date,timedelta
 import math
+import numpy as np
 
-version = "1.21"       # 24/09/26
+version = "1.22"       # 24/09/27
 
 # TODO:  pixela
 
@@ -48,6 +49,7 @@ def main_proc():
     read_data()
     read_pastdata()
     create_month_info()
+    create_df_month()
     parse_template()
 
     ftp_upload()
@@ -88,8 +90,34 @@ def conv_datetime_to_minute(dt) :
     return hh * 60 + mm
 
 def read_pastdata():
-    global df_past
+    global df_past , df_all
     df_past = pd.read_csv(pastdata,  sep='\t')
+    date_list = []
+    row_list = []
+    for index , row in df_past.iterrows() :  
+        line_list = []
+        for i in range(10) :
+            if i == 0 :      #  yymm 
+                dt = datetime.datetime.strptime(row.iloc[i] + "/01", '%Y/%m/%d')
+                tdate = datetime.date(dt.year, dt.month, dt.day)
+                date_list.append(tdate)
+            else :
+                #print(row[i])
+                if not pd.isna(row.iloc[i]) :
+                    hh = int(row.iloc[i].split(":")[0])
+                    mm = int(row.iloc[i].split(":")[1])
+                    tm = hh * 60 + mm 
+                    line_list.append(tm)
+                    #print(tm)
+                else : 
+                    line_list.append(np.nan)
+            
+        #print(line_list)
+        row_list.append(line_list)
+    #print(row_list)
+    columns = ['sleep_ave','sleep_min','sleep_max','start_ave','start_min','start_max','end_ave','end_min','end_max']
+    df_all = pd.DataFrame(data=row_list,  index=date_list,  columns=columns)
+    #print(df_all)
 
 def daily_graph() :
     for index , row in df.tail(30).iterrows() :    
@@ -206,6 +234,15 @@ def ranking_sleep_time_com(sort_df) :
         mm = stime % 60
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
     
+#   月別平均睡眠時間ランキング
+def rank_month_sleep_max() :
+    sort_df = df_month.sort_values('sleep_ave',ascending=False)
+    i = 0 
+    for dt , row in sort_df.head(10).iterrows() :  
+        i += 1
+        date_str = f'{dt.year}/{dt.month:02}' 
+        hhmm = conv_time_to_str(row['sleep_ave'])
+        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
 # 月ごとの情報 month_info_list を作成する
 # month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
@@ -259,6 +296,22 @@ def create_month_info() :
                                         end_list,max_end,min_end,std_sleep,std_start,std_end  ) :
         mlist = [yymm,sp,max_sp,min_sp,s,max_s,min_s,e,max_e,min_e,std_sp,std_s,std_e]
         month_info_list.append(mlist)
+
+###############################################################################
+#  月の情報をdfで保持する
+#  df_month  カラム  yymm sleep sleep_max sleep_min start start_max start_min end end_max end_min
+#            yymm は int  sleep 等は分単位 int 
+def create_df_month() :
+    global  df_month
+    #m_ave = df.resample(rule = "ME").mean().to_dict()
+    m_ave = df.resample(rule = "ME").mean()
+    m_max = df.resample(rule = "ME").max()
+    m_min = df.resample(rule = "ME").min()
+    result = pd.concat([m_ave, m_max,m_min], axis=1)
+    result.columns = ['start_ave','end_ave','sleep_ave','start_max','end_max','sleep_max','start_min','end_min','sleep_min']
+    df_month = pd.concat([df_all,result ], axis=0)
+    #print(df_month)
+
 
 def month_info_table() :
     for dt in month_info_list :
@@ -394,6 +447,9 @@ def parse_template() :
             continue
         if "%rank_sleep_30_min% " in line :
             ranking_sleep_time_30_min()
+            continue
+        if "%rank_month_sleep_max%" in line :
+            rank_month_sleep_max()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
