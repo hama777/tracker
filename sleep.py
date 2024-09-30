@@ -12,7 +12,7 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-version = "1.22"       # 24/09/27
+version = "1.23"       # 24/09/30
 
 # TODO:  pixela
 
@@ -244,6 +244,16 @@ def rank_month_sleep_max() :
         hhmm = conv_time_to_str(row['sleep_ave'])
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
+def rank_month_sleep_min() :
+    sort_df = df_month.sort_values('sleep_ave',ascending=True)
+    i = 0 
+    for dt , row in sort_df.head(10).iterrows() :  
+        i += 1
+        date_str = f'{dt.year}/{dt.month:02}' 
+        hhmm = conv_time_to_str(row['sleep_ave'])
+        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
+
+
 # 月ごとの情報 month_info_list を作成する
 # month_info_list は月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
 def create_month_info() :
@@ -450,6 +460,9 @@ def parse_template() :
             continue
         if "%rank_month_sleep_max%" in line :
             rank_month_sleep_max()
+            continue
+        if "%rank_month_sleep_min%" in line :
+            rank_month_sleep_min()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
