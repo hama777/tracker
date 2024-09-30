@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/09/27 -->
+    <!-- 24/09/30 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -70,7 +70,7 @@
     
             var options = {
                 title: '日別時間',
-                colors: ['#32a89d'] ,
+                colors: ['green'] ,
                 hAxis: {title: '日付'},
                 chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
                 backgroundColor: '#cfe6e3' ,
@@ -95,7 +95,7 @@
     
             var options = {
                 title: '月別時間',
-                colors: ['#32a89d'] ,
+                colors: ['green'] ,
                 hAxis: {title: '日付'},
                 chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
                 backgroundColor: '#cfe6e3' ,
@@ -121,7 +121,7 @@
     
             var options = {
                 title: '月別時間',
-                colors: ['#32a89d'] ,
+                colors: ['green'] ,
                 hAxis: {title: '日付'},
                 chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
                 backgroundColor: '#cfe6e3' ,
@@ -147,7 +147,7 @@
     
             var options = {
                 title: '月別時間',
-                colors: ['#32a89d'] ,
+                colors: ['green'] ,
                 hAxis: {title: '日付'},
                 chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
                 backgroundColor: '#cfe6e3' ,
@@ -230,6 +230,13 @@
                 <table class="rank">
                     <tr><th>順位</th><th>時間</th><th>年月</th></tr>
                     %rank_month_sleep_max% 
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">最短時間</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>年月</th></tr>
+                    %rank_month_sleep_min% 
                 </table>
             </div>
         </div>
