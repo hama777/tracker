@@ -12,7 +12,7 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-version = "1.23"       # 24/09/30
+version = "1.24"       # 24/10/01 v1.24 df_month による書き換え
 
 # TODO:  pixela
 
@@ -130,7 +130,7 @@ def daily_graph() :
         #out.write(f"['{str_date}',[{hh},{mm},0]],")
 
 #   月別平均睡眠時間グラフ
-def month_graph() :
+def month_graph_old() :
     for index , row in df_past.iterrows() :  
         yy = int(row['yymm'].split("/")[0]) - 2000
         mon = int(row['yymm'].split("/")[1]) 
@@ -147,6 +147,15 @@ def month_graph() :
         yy = yymm.year - 2000
         mon = yymm.month
         out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[1])}]],")
+
+#   月別平均睡眠時間グラフ
+def month_graph() :
+    for dt , row in df_month.iterrows() :  
+        date_str = f'{dt.year-2000}/{dt.month:02}' 
+        tm = row['sleep_ave']
+        hh = int(tm) // 60
+        mm = int(tm) % 60
+        out.write(f"['{date_str}',[{hh},{mm},0]],")
 
 #   月別平均就寝時刻グラフ
 def month_start_time_graph() :
