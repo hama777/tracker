@@ -12,7 +12,7 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-version = "1.24"       # 24/10/01 v1.24 df_month による書き換え
+version = "1.25"       # 24/10/02 v1.25 月別睡眠時間ランキングで今月分を赤字にする
 
 # TODO:  pixela
 
@@ -152,13 +152,13 @@ def month_graph_old() :
 def month_graph() :
     for dt , row in df_month.iterrows() :  
         date_str = f'{dt.year-2000}/{dt.month:02}' 
-        tm = row['sleep_ave']
-        hh = int(tm) // 60
-        mm = int(tm) % 60
+        tm = int(row['sleep_ave'])
+        hh = tm // 60
+        mm = tm % 60
         out.write(f"['{date_str}',[{hh},{mm},0]],")
 
 #   月別平均就寝時刻グラフ
-def month_start_time_graph() :
+def month_start_time_graph_old() :
     for index , row in df_past.iterrows() :  
         if type(row['start_ave']) is not str :
             continue 
@@ -180,8 +180,22 @@ def month_start_time_graph() :
         #mm  = start % 60 
         out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[4])}]],")   # dt[4] = 月平均就寝時刻
 
+#   月別平均就寝時刻グラフ
+def month_start_time_graph() :
+    for dt , row in df_month.iterrows() :  
+        date_str = f'{dt.year-2000}/{dt.month:02}' 
+        if math.isnan(row['start_ave']) :
+            continue
+        tm = int(row['start_ave'])
+        hh = tm // 60
+        if hh < 8 :              # 24:00 を超える場合があるため
+            hh = hh + 24
+        mm = tm % 60
+        out.write(f"['{date_str}',[{hh},{mm},0]],")
+
+
 #   月別平均起床時刻グラフ
-def month_end_time_graph() :
+def month_end_time_graph_old() :
     for index , row in df_past.iterrows() :  
         if type(row['end_ave']) is not str :
             continue 
@@ -199,6 +213,18 @@ def month_end_time_graph() :
         #hh  = start // 60 
         #mm  = start % 60 
         out.write(f"['{yy}{mon:02}',[{conv_time_to_graph_str(dt[7])}]],")   # dt[7] 月平均起床時刻 
+
+#   月別平均起床時刻グラフ
+def month_end_time_graph() :
+    for dt , row in df_month.iterrows() :  
+        date_str = f'{dt.year-2000}/{dt.month:02}' 
+        if math.isnan(row['end_ave']) :
+            continue
+        tm = int(row['end_ave'])
+        hh = tm // 60
+        mm = tm % 60
+        out.write(f"['{date_str}',[{hh},{mm},0]],")
+
 
 def start_time_graph() :
     for index , row in df.tail(90).iterrows() :    
@@ -250,6 +276,8 @@ def rank_month_sleep_max() :
     for dt , row in sort_df.head(10).iterrows() :  
         i += 1
         date_str = f'{dt.year}/{dt.month:02}' 
+        if dt.year == today_date.year and dt.month == today_date.month :
+            date_str = f'<span class=red>{date_str}</span>'
         hhmm = conv_time_to_str(row['sleep_ave'])
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
@@ -259,6 +287,8 @@ def rank_month_sleep_min() :
     for dt , row in sort_df.head(10).iterrows() :  
         i += 1
         date_str = f'{dt.year}/{dt.month:02}' 
+        if dt.year == today_date.year and dt.month == today_date.month :
+            date_str = f'<span class=red>{date_str}</span>'
         hhmm = conv_time_to_str(row['sleep_ave'])
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
@@ -425,9 +455,12 @@ def ftp_upload() :
         ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
 
 def today(s):
+    global today_date
     d = today_datetime.strftime("%m/%d %H:%M")
     s = s.replace("%today%",d)
     out.write(s)
+    today = date.today()
+    
 
 def parse_template() :
     global out 
