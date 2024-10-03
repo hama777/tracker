@@ -12,7 +12,7 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-version = "1.25"       # 24/10/02 v1.25 月別睡眠時間ランキングで今月分を赤字にする
+version = "1.26"       # 24/10/03 v1.26 月別情報をdf_monthで書き換え
 
 # TODO:  pixela
 
@@ -268,7 +268,8 @@ def ranking_sleep_time_com(sort_df) :
         hh = int(stime / 60)
         mm = stime % 60
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
-    
+
+#   TODO: 出力処理の共通化    
 #   月別平均睡眠時間ランキング
 def rank_month_sleep_max() :
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
@@ -348,7 +349,7 @@ def create_month_info() :
 
 ###############################################################################
 #  月の情報をdfで保持する
-#  df_month  カラム  yymm sleep sleep_max sleep_min start start_max start_min end end_max end_min
+#  df_month  カラム  yymm start_ave end_ave sleep_ave start_max end_max sleep_max start_min end_min sleep_min
 #            yymm は int  sleep 等は分単位 int 
 def create_df_month() :
     global  df_month
@@ -362,7 +363,7 @@ def create_df_month() :
     #print(df_month)
 
 
-def month_info_table() :
+def month_info_table_old() :
     for dt in month_info_list :
         yymm = dt[0]
         yy = yymm.year - 2000
@@ -389,6 +390,35 @@ def month_info_table() :
                   f'<td  align="right">{end}</td>'
                   f'<td  align="right">{std_end:5.2f}</td>'
                   f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
+    all_statistics()
+
+def month_info_table() :
+    for dt , row in df_month.iterrows() :  
+        if not dt.year == 2024  :       #  今年分のみ表示
+            continue
+        yy = dt.year
+        mm = dt.month
+        sleep_ave  = conv_time_to_str(row['sleep_ave'])
+        sleep_min  = conv_time_to_str(row['sleep_min'])
+        sleep_max  = conv_time_to_str(row['sleep_max'])
+        start_ave  = conv_time_to_str(row['start_ave'])
+        start_min  = conv_time_to_str(row['start_min'])
+        start_max  = conv_time_to_str(row['start_max'])
+        end_ave  = conv_time_to_str(row['end_ave'])
+        end_min  = conv_time_to_str(row['end_min'])
+        end_max  = conv_time_to_str(row['end_max'])
+
+        out.write(f'<tr><td>{yy}/{mm:02}</td><td  align="right">{sleep_ave}</td>'
+                  f'<td  align="right">---</td>'
+                  f'<td  align="right">{sleep_min}</td>'
+                  f'<td  align="right">{sleep_max}</td>'
+                  f'<td  align="right">{start_ave}</td>'
+                  f'<td  align="right">---</td>'
+                  f'<td>{start_min}</td><td>{start_max}</td>'
+                  f'<td  align="right">{end_ave}</td>'
+                  f'<td  align="right">---</td>'
+                  f'<td>{end_min}</td><td>{end_max}</td></tr>\n')
+
     all_statistics()
 
 def all_statistics() :
