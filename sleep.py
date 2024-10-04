@@ -12,7 +12,7 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-version = "1.26"       # 24/10/03 v1.26 月別情報をdf_monthで書き換え
+version = "1.27"       # 24/10/04 v1.27 month_info_list 廃止
 
 # TODO:  pixela
 
@@ -29,7 +29,7 @@ logfile = appdir + "\\tracker.log"
 pastdata = appdir + "/sleeppast.txt"
 rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
-month_info_list = []   # 月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
+#month_info_list = []   # 月ごとのリスト  要素は 年月 平均時間  平均就寝時刻  平均起床時刻
 
 ftp_host = ftp_user = ftp_pass = ftp_url =  ""
 df = ""
@@ -48,7 +48,7 @@ def main_proc():
     ftp_url = ftp_url.replace("index.htm","sleep.htm")
     read_data()
     read_pastdata()
-    create_month_info()
+    #create_month_info()
     create_df_month()
     parse_template()
 
@@ -102,22 +102,18 @@ def read_pastdata():
                 tdate = datetime.date(dt.year, dt.month, dt.day)
                 date_list.append(tdate)
             else :
-                #print(row[i])
                 if not pd.isna(row.iloc[i]) :
                     hh = int(row.iloc[i].split(":")[0])
                     mm = int(row.iloc[i].split(":")[1])
                     tm = hh * 60 + mm 
                     line_list.append(tm)
-                    #print(tm)
                 else : 
                     line_list.append(np.nan)
             
-        #print(line_list)
         row_list.append(line_list)
-    #print(row_list)
+
     columns = ['sleep_ave','sleep_min','sleep_max','start_ave','start_min','start_max','end_ave','end_min','end_max']
     df_all = pd.DataFrame(data=row_list,  index=date_list,  columns=columns)
-    #print(df_all)
 
 def daily_graph() :
     for index , row in df.tail(30).iterrows() :    
@@ -392,6 +388,8 @@ def month_info_table_old() :
                   f'<td>{min_end}</td><td>{max_end}</td></tr>\n')
     all_statistics()
 
+#  月別情報テーブル
+#  TODO: ループによる処理に変更
 def month_info_table() :
     for dt , row in df_month.iterrows() :  
         if not dt.year == 2024  :       #  今年分のみ表示
