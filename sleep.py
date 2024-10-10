@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 24/10/09 v1.29 月別情報テーブル処理変更
-version = "1.29"       
+# 24/10/10 v1.30  日別ランキングに曜日を出す
+version = "1.30"       
 
 # TODO:  pixela
 
@@ -164,6 +164,7 @@ def end_time_graph() :
         str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
         out.write(f"['{str_date}',[{conv_time_to_graph_str(row['end'])}]],")
 
+#   日別睡眠時間ランキング
 def ranking_sleep_time_max() :
     sort_df = df.copy()
     sort_df = sort_df.sort_values('sleep',ascending=False)
@@ -184,11 +185,12 @@ def ranking_sleep_time_30_min() :
     sort_df = sort_df.sort_values('sleep',ascending=True)
     ranking_sleep_time_com(sort_df)
 
+#   日別睡眠時間ランキング 出力処理
 def ranking_sleep_time_com(sort_df) :
     i = 0 
     for index , row in sort_df.head(10).iterrows() :  
         i = i + 1 
-        str_date = f'{index.strftime("%m")}/{index.strftime("%d")}'
+        str_date = f'{index.strftime("%m")}/{index.strftime("%d")} ({index.strftime("%a")})'
         if index.date() == lastdate :      # 最終データなら赤字にする
             str_date = f'<span class=red>{str_date}</span>'
 
@@ -235,36 +237,6 @@ def create_df_month() :
     df_month = pd.concat([df_all,result ], axis=0)
 
 #  月別情報テーブル
-def month_info_table_old() :
-    for dt , row in df_month.iterrows() :  
-        if not dt.year == 2024  :       #  今年分のみ表示
-            continue
-        yy = dt.year
-        mm = dt.month
-        sleep_ave  = conv_time_to_str(row['sleep_ave'])
-        sleep_min  = conv_time_to_str(row['sleep_min'])
-        sleep_max  = conv_time_to_str(row['sleep_max'])
-        start_ave  = conv_time_to_str(row['start_ave'])
-        start_min  = conv_time_to_str(row['start_min'])
-        start_max  = conv_time_to_str(row['start_max'])
-        end_ave  = conv_time_to_str(row['end_ave'])
-        end_min  = conv_time_to_str(row['end_min'])
-        end_max  = conv_time_to_str(row['end_max'])
-
-        out.write(f'<tr><td>{yy}/{mm:02}</td><td  align="right">{sleep_ave}</td>'
-                  f'<td  align="right">---</td>'
-                  f'<td  align="right">{sleep_min}</td>'
-                  f'<td  align="right">{sleep_max}</td>'
-                  f'<td  align="right">{start_ave}</td>'
-                  f'<td  align="right">---</td>'
-                  f'<td>{start_min}</td><td>{start_max}</td>'
-                  f'<td  align="right">{end_ave}</td>'
-                  f'<td  align="right">---</td>'
-                  f'<td>{end_min}</td><td>{end_max}</td></tr>\n')
-
-    all_statistics()
-
-#  月別情報テーブル
 def month_info_table() :
     col_list = ['sleep_ave','sleep_min','sleep_max','start_ave','start_min','start_max',
                 'end_ave','end_min','end_max']
@@ -301,28 +273,6 @@ def all_statistics() :
               f'<td class=all>{min_start}</td><td class=all>{max_start}</td>'
               f'<td class=all align="right">{end}</td>'
               f'<td class=all>{min_end}</td><td class=all>{max_end}</td></tr>\n')
-
-def all_statistics_old() :
-    sleep_ave = int(df['sleep'].mean())
-    min_sleep = df['sleep'].min()
-    max_sleep = df['sleep'].max()
-    start  = conv_time_to_str(int(df['start'].mean()))
-    min_start = conv_time_to_str(df['start'].min())
-    max_start = conv_time_to_str(df['start'].max())
-    end  = conv_time_to_str(int(df['end'].mean()))
-    min_end  = conv_time_to_str(df['end'].min())
-    max_end  = conv_time_to_str(df['end'].max())
-    out.write(f'<tr><td class=all>全体</td><td class=all align="right">{sleep_ave//60}:{sleep_ave%60:02}</td>'
-              f'<td class=all align="right">--</td>'
-              f'<td class=all align="right">{min_sleep//60}:{min_sleep%60:02}</td>'
-              f'<td class=all align="right">{max_sleep//60}:{max_sleep%60:02}</td>'
-              f'<td class=all align="right">{start}</td>'
-              f'<td class=all align="right">--</td>'
-              f'<td class=all>{min_start}</td><td class=all>{max_start}</td>'
-              f'<td class=all align="right">{end}</td>'
-              f'<td class=all align="right">--</td>'
-              f'<td class=all>{min_end}</td><td class=all>{max_end}</td></tr>\n')
-
 
 #   時刻 int を形式 hh:mm の文字列に変換する
 def conv_time_to_str(timedata) :
