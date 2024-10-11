@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 24/10/10 v1.30  日別ランキングに曜日を出す
-version = "1.30"       
+# 24/10/11 v1.31  月別平均睡眠時間ランキング出力共通化
+version = "1.31"       
 
 # TODO:  pixela
 
@@ -199,21 +199,32 @@ def ranking_sleep_time_com(sort_df) :
         mm = stime % 60
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
 
-#   TODO: 出力処理の共通化    
 #   月別平均睡眠時間ランキング
 def rank_month_sleep_max() :
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
-    i = 0 
-    for dt , row in sort_df.head(10).iterrows() :  
-        i += 1
-        date_str = f'{dt.year}/{dt.month:02}' 
-        if dt.year == today_date.year and dt.month == today_date.month :
-            date_str = f'<span class=red>{date_str}</span>'
-        hhmm = conv_time_to_str(row['sleep_ave'])
-        out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
+    rank_month_sleep_com(sort_df)
+    # i = 0 
+    # for dt , row in sort_df.head(10).iterrows() :  
+    #     i += 1
+    #     date_str = f'{dt.year}/{dt.month:02}' 
+    #     if dt.year == today_date.year and dt.month == today_date.month :
+    #         date_str = f'<span class=red>{date_str}</span>'
+    #     hhmm = conv_time_to_str(row['sleep_ave'])
+    #     out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
 def rank_month_sleep_min() :
     sort_df = df_month.sort_values('sleep_ave',ascending=True)
+    rank_month_sleep_com(sort_df)
+    # i = 0 
+    # for dt , row in sort_df.head(10).iterrows() :  
+    #     i += 1
+    #     date_str = f'{dt.year}/{dt.month:02}' 
+    #     if dt.year == today_date.year and dt.month == today_date.month :
+    #         date_str = f'<span class=red>{date_str}</span>'
+    #     hhmm = conv_time_to_str(row['sleep_ave'])
+    #     out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
+
+def rank_month_sleep_com(sort_df) :
     i = 0 
     for dt , row in sort_df.head(10).iterrows() :  
         i += 1
