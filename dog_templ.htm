@@ -1,0 +1,49 @@
+<html>
+    <!-- 24/07/09 -->
+    <head>
+        <title>Dog Walk List</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <link rel="stylesheet" href="tracker.css">
+    </head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
+    %daily_graph%
+                ]);
+        
+                var options = {
+                    title: '日別時間',
+                    colors: ['#a442f5'] ,
+                    vAxis: {minValue:0,ticks:[0,30,60,90,120]},
+                    hAxis: {title: '日付'},
+                    chartArea: { backgroundColor: '#e3d8ed' , left:50,right:30 },
+                    backgroundColor: '#f5f0fa' ,
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+
+<body>
+        <h1>Dog Walk List</h1>
+        <span style="font-size:12px;">Ver : %version%</span>
+        <span style="font-size:12px;">実行日時   : %today%</span>
+
+        <h2>明細データ</h2>
+        <table>
+            <tr><th>日時</th><th>継続時間</th></tr>
+            %detail_info% 
+        </table>
+    </body>
+</html>
