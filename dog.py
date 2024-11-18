@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/15 v0.00 
-version = "0.00"  
+# 24/11/18 v0.01    日別集計を追加 
+version = "0.01"  
 
 # TODO: 
 
@@ -58,7 +58,7 @@ def main_proc():
     read_data()
     # read_pastdata()
     
-    # totalling_daily_data()
+    totalling_daily_data()
     # output_ptime_to_csv()
     # create_month_data()
     # create_year_data_pf()
@@ -94,12 +94,18 @@ def read_data():
                 process_list.append(tt)
 
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
-    df_day = df
-    df_day["date"] = pd.to_datetime(df_day["date"])
+#    df_day = df
+    df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-    df_day = df_day.set_index("date")
+#    df_day = df_day.set_index("date")
 
-    print(df,df_day)
+    #print(df)
+
+def daily_info() :
+    df_tmp = df_dd.tail(30)
+    for index , row in df_tmp.iterrows() :
+        date_str = index.strftime("%m/%d(%a) %H:%M")
+        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td></tr>')
 
 def detail_info() :
     df_tmp = df.tail(30)
@@ -113,11 +119,9 @@ def detail_info() :
 def totalling_daily_data() :
     global df_dd
 
-    df_pf_tmp  = df_pf.resample('D')['ptime'].sum()
-    df_vn_tmp  = df_vn.resample('D')['ptime'].sum()
+    df_tmp  = df.resample('D')['ptime'].sum()
     date_list = []
     ptime_list = []
-    ptime_list_vn = []
     start_date  = datetime.date(2024, 1, 1)
     target_date = start_date
     end_date = datetime.date.today()
@@ -125,21 +129,18 @@ def totalling_daily_data() :
     while target_date  < end_date:
         str_date = target_date.strftime("%Y-%m-%d")
         try:
-            ptime = df_pf_tmp.loc[str_date]
+            ptime = df_tmp.loc[str_date]
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
-        try:
-            ptime_vn = df_vn_tmp.loc[str_date]
-        except KeyError:          #  日付のデータがなければ ptime は 0
-            ptime_vn = 0 
 
         date_list.append(target_date)
         ptime_list.append(ptime)
-        ptime_list_vn.append(ptime_vn)
         target_date +=  datetime.timedelta(days=1)
 
-    df_dd = pd.DataFrame(list(zip(date_list,ptime_list,ptime_list_vn)), columns = ['date','ptime','vtime'])
+    df_dd = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
     df_dd['date'] = pd.to_datetime(df_dd["date"])
+    df_dd = df_dd.set_index("date")
+    print(df_dd)
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
@@ -455,6 +456,9 @@ def parse_template() :
     f = open(templatefile , 'r', encoding='utf-8')
     out = open(resultfile,'w' ,  encoding='utf-8')
     for line in f :
+        if "%daily_info%" in line :
+            daily_info()
+            continue
         if "%detail_info%" in line :
             detail_info()
             continue
