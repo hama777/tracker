@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/18 v0.01    日別集計を追加 
-version = "0.01"  
+# 24/11/18 v0.02    
+version = "0.02"  
 
 # TODO: 
 
@@ -113,11 +113,14 @@ def detail_info() :
         date_str = index.strftime("%m/%d(%a) %H:%M")
         out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td></tr>')
 
-
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd を作成する
 #   df_dd は ptime が 0 の日(データ)も含む     date は 2024年1月1日から実行前日まで
 def totalling_daily_data() :
     global df_dd
+
+    df_tmp = df
+    daily_counts = df_tmp.groupby(df_tmp.index.date).size().reset_index(name='row_count')
+    #print(daily_counts)
 
     df_tmp  = df.resample('D')['ptime'].sum()
     date_list = []
@@ -140,7 +143,7 @@ def totalling_daily_data() :
     df_dd = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
     df_dd['date'] = pd.to_datetime(df_dd["date"])
     df_dd = df_dd.set_index("date")
-    print(df_dd)
+    #print(df_dd)
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
