@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/18 v0.02    
-version = "0.02"  
+# 24/11/20 v0.03  日別データに回数を表示
+version = "0.03"  
 
 # TODO: 
 
@@ -27,7 +27,7 @@ datadir = appdir
 templatefile = appdir + "/dog_templ.htm"
 resultfile = appdir + "/dog.htm"
 conffile = appdir + "/tracker.conf"
-logfile = appdir + "\\tracker.log"
+logfile = appdir + "/dog.log"
 pastdata = appdir + "/pastdata.txt"
 rawdata = appdir + "/rawdata.txt"
 past_pf_dic = []   #  過去の月別時間 pf   辞書  キー  hhmm   値  分
@@ -55,6 +55,8 @@ def main_proc():
     logf.write("\n=== start %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     date_settings()
     read_config()
+    if debug == 0 :
+        ftp_url = ftp_url.replace("index.htm","dog.htm")
     read_data()
     # read_pastdata()
     
@@ -64,10 +66,10 @@ def main_proc():
     # create_year_data_pf()
     # create_year_data_vn()
     parse_template()
-    # ftp_upload()
+    ftp_upload()
     # post_process_datafile()
-    # logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    # logf.close()
+    logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    logf.close()
 
 def read_data():
     global df_pf,df_vn,datafile,df
@@ -104,8 +106,8 @@ def read_data():
 def daily_info() :
     df_tmp = df_dd.tail(30)
     for index , row in df_tmp.iterrows() :
-        date_str = index.strftime("%m/%d(%a) %H:%M")
-        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td></tr>')
+        date_str = index.strftime("%m/%d(%a)")
+        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td><td align="right">{row["count"]}</td></tr>')
 
 def detail_info() :
     df_tmp = df.tail(30)
@@ -119,12 +121,14 @@ def totalling_daily_data() :
     global df_dd
 
     df_tmp = df
-    daily_counts = df_tmp.groupby(df_tmp.index.date).size().reset_index(name='row_count')
+    #daily_counts = df_tmp.groupby(df_tmp.index.date).size().reset_index(name='row_count')
+    daily_counts = df_tmp.groupby(df_tmp.index.date).size()
     #print(daily_counts)
 
     df_tmp  = df.resample('D')['ptime'].sum()
     date_list = []
     ptime_list = []
+    count_list = []
     start_date  = datetime.date(2024, 1, 1)
     target_date = start_date
     end_date = datetime.date.today()
@@ -132,15 +136,18 @@ def totalling_daily_data() :
     while target_date  < end_date:
         str_date = target_date.strftime("%Y-%m-%d")
         try:
-            ptime = df_tmp.loc[str_date]
+            ptime = df_tmp.loc[str_date]   # df_tmp のdateはstr型なのでstr型で比較
+            count = daily_counts.loc[target_date]  # daily_counts のdateはdate型なのでdate型で比較
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
+            count = 0 
 
         date_list.append(target_date)
         ptime_list.append(ptime)
+        count_list.append(count)
         target_date +=  datetime.timedelta(days=1)
 
-    df_dd = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    df_dd = pd.DataFrame(list(zip(date_list,ptime_list,count_list)), columns = ['date','ptime','count'])
     df_dd['date'] = pd.to_datetime(df_dd["date"])
     df_dd = df_dd.set_index("date")
     #print(df_dd)
