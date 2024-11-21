@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/20 v0.03  日別データに回数を表示
-version = "0.03"  
+# 24/11/21 v1.00  webで表示できるようにした
+version = "1.00"  
 
 # TODO: 
 
@@ -48,7 +48,7 @@ df_dd = ""    #  日ごとのデータ df  pf 用
 today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
-    global  datafile,logf
+    global  datafile,logf,ftp_url
 
     locale.setlocale(locale.LC_TIME, '')
     logf = open(logfile,'a',encoding='utf-8')
@@ -61,6 +61,7 @@ def main_proc():
     # read_pastdata()
     
     totalling_daily_data()
+    create_df_month()
     # output_ptime_to_csv()
     # create_month_data()
     # create_year_data_pf()
@@ -151,6 +152,44 @@ def totalling_daily_data() :
     df_dd['date'] = pd.to_datetime(df_dd["date"])
     df_dd = df_dd.set_index("date")
     #print(df_dd)
+
+def create_df_month() :
+    global  df_month
+
+    m_sum = df.resample(rule = "ME").sum()
+    #m_ave = df.resample(rule = "ME").mean()
+    #m_max = df.resample(rule = "ME").max()
+    #m_min = df.resample(rule = "ME").min()
+    print(m_sum)
+
+    for index,row in m_sum.iterrows() :
+        if index.year == today_yy and index.month == today_mm:
+        # 現在の月の場合
+            days_in_month = today_dd
+        else:
+        # 過去の月の場合
+            days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
+        ave = row['ptime'] / days_in_month
+        print(ave)
+
+    # 平均値列を追加
+    #df_month['ave_per_day'] = df_month.apply(calculate_average, axis=1)
+    m_sum['average_per_day'] = [
+        calculate_average(idx, row['ptime']) for idx, row in m_sum.iterrows()
+    ]
+    print(m_sum)
+    #result = pd.concat([m_ave, m_max,m_min], axis=1)
+    #result.columns = ['start_ave','end_ave','sleep_ave','start_max','end_max','sleep_max','start_min','end_min','sleep_min']
+    #df_month = pd.concat([df_all,result ], axis=0)
+
+def calculate_average(index, ptime):
+    if index.year == today_yy and index.month == today_mm:
+        # 現在の月の場合
+        days_in_month = today_dd
+    else:
+        # 過去の月の場合
+        days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
+    return ptime / days_in_month
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
