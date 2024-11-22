@@ -12,16 +12,15 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/21 v1.00  webで表示できるようにした
-version = "1.00"  
+# 24/11/22 v1.01  月別情報追加
+version = "1.01"  
 
 # TODO: 
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
-dataname = "/CSVFile.csv"
-datafile = ""
+datafile = appdir + "/save.txt"
 backfile = appdir + "/save.txt"
 datadir = appdir
 templatefile = appdir + "/dog_templ.htm"
@@ -75,7 +74,6 @@ def main_proc():
 def read_data():
     global df_pf,df_vn,datafile,df
 
-    datafile = datadir + dataname
     date_list = []
     process_list = []
     if debug == 1 :
@@ -97,12 +95,8 @@ def read_data():
                 process_list.append(tt)
 
     df = pd.DataFrame(list(zip(date_list,process_list)), columns = ['date','ptime'])
-#    df_day = df
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-#    df_day = df_day.set_index("date")
-
-    #print(df)
 
 def daily_info() :
     df_tmp = df_dd.tail(30)
@@ -160,7 +154,6 @@ def create_df_month() :
     #m_ave = df.resample(rule = "ME").mean()
     #m_max = df.resample(rule = "ME").max()
     #m_min = df.resample(rule = "ME").min()
-    print(m_sum)
 
     for index,row in m_sum.iterrows() :
         if index.year == today_yy and index.month == today_mm:
@@ -170,17 +163,13 @@ def create_df_month() :
         # 過去の月の場合
             days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
         ave = row['ptime'] / days_in_month
-        print(ave)
 
     # 平均値列を追加
     #df_month['ave_per_day'] = df_month.apply(calculate_average, axis=1)
-    m_sum['average_per_day'] = [
+    m_sum['day_ave'] = [
         calculate_average(idx, row['ptime']) for idx, row in m_sum.iterrows()
     ]
-    print(m_sum)
-    #result = pd.concat([m_ave, m_max,m_min], axis=1)
-    #result.columns = ['start_ave','end_ave','sleep_ave','start_max','end_max','sleep_max','start_min','end_min','sleep_min']
-    #df_month = pd.concat([df_all,result ], axis=0)
+    df_month = m_sum
 
 def calculate_average(index, ptime):
     if index.year == today_yy and index.month == today_mm:
@@ -190,6 +179,14 @@ def calculate_average(index, ptime):
         # 過去の月の場合
         days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
     return ptime / days_in_month
+
+def month_info() :
+    for index,row in df_month.iterrows() :
+        date_str = index.month
+        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td>'
+                  f'<td align="right">{row["day_ave"]:5.1f}</td></tr>')
+
+
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
@@ -374,7 +371,7 @@ def minutes_to_hhmm(mm) :
     return hhmm
 
 #   月別情報
-def month_info()  :
+def month_info_old()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
     #  TODO: 年は考慮していない
     
@@ -507,6 +504,9 @@ def parse_template() :
     for line in f :
         if "%daily_info%" in line :
             daily_info()
+            continue
+        if "%month_info%" in line :
+            month_info()
             continue
         if "%detail_info%" in line :
             detail_info()
