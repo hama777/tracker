@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/11/20 日別データに回数を表示 -->
+    <!-- 24/11/22 月別情報追加 -->
     <head>
         <title>Dog Walk List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -40,6 +40,11 @@
         <span style="font-size:12px;">Ver : %version%</span>
         <span style="font-size:12px;">実行日時   : %today%</span>
 
+        <h2>月別データ</h2>
+        <table>
+            <tr><th>日時</th><th>総時間</th><th>平均</th></tr>
+            %month_info% 
+        </table>
         <h2>日別データ</h2>
         <table>
             <tr><th>日時</th><th>継続時間</th><th>回数</th></tr>
