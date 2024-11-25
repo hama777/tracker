@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/22 v1.01  月別情報追加
-version = "1.01"  
+# 24/11/25 v1.02  月別グラフ追加
+version = "1.02"  
 
 # TODO: 
 
@@ -183,10 +183,12 @@ def calculate_average(index, ptime):
 def month_info() :
     for index,row in df_month.iterrows() :
         date_str = index.month
-        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td>'
+        out.write(f'<tr><td align="right">{date_str}</td><td align="right">{row["ptime"]}</td>'
                   f'<td align="right">{row["day_ave"]:5.1f}</td></tr>')
 
-
+def month_graph() :
+    for index,row in df_month.iterrows() :
+        out.write(f"['{index.month}',{row["day_ave"]:5.1f}],") 
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
@@ -507,6 +509,9 @@ def parse_template() :
             continue
         if "%month_info%" in line :
             month_info()
+            continue
+        if "%month_graph%" in line :
+            month_graph()
             continue
         if "%detail_info%" in line :
             detail_info()
