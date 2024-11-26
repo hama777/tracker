@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/25 v1.02  月別グラフ追加
-version = "1.02"  
+# 24/11/26 v1.03  日別グラフ追加
+version = "1.03"  
 
 # TODO: 
 
@@ -104,6 +104,13 @@ def daily_info() :
         date_str = index.strftime("%m/%d(%a)")
         out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td><td align="right">{row["count"]}</td></tr>')
 
+def daily_graph() :
+    df_tmp = df_dd.tail(30)
+    for index , row in df_tmp.iterrows() :
+        date_str = index.strftime("%d")
+        ptime = row["ptime"]
+        out.write(f"['{date_str}',{ptime}],") 
+
 def detail_info() :
     df_tmp = df.tail(30)
     for index , row in df_tmp.iterrows() :
@@ -188,7 +195,8 @@ def month_info() :
 
 def month_graph() :
     for index,row in df_month.iterrows() :
-        out.write(f"['{index.month}',{row["day_ave"]:5.1f}],") 
+        day_ave = row["day_ave"]
+        out.write(f"['{index.month}',{day_ave:5.1f}],") 
 
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
@@ -348,18 +356,6 @@ def daily_movav_com(type) :
         dd = row['date'].strftime("%m/%d")
         out.write(f"['{dd}',{ptime:5.0f}],") 
 
-#   過去30日間の1日ごとの練習時間をグラフにする
-def daily_graph() :
-    df30 = df_dd.tail(30)
-    for _ , row in df30.iterrows() :
-        date_str = row['date'].strftime('%d')
-        out.write(f"['{date_str}',{row['ptime']:5.0f}],")
-
-def daily_graph_vn() :
-    df30 = df_dd.tail(30)
-    for _ , row in df30.iterrows() :
-        date_str = row['date'].strftime('%d')
-        out.write(f"['{date_str}',{row['vtime']:5.0f}],")
 
 #   前月の日数
 def last_month_days() :
@@ -506,6 +502,9 @@ def parse_template() :
     for line in f :
         if "%daily_info%" in line :
             daily_info()
+            continue
+        if "%daily_graph%" in line :
+            daily_graph()
             continue
         if "%month_info%" in line :
             month_info()
