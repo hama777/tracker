@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/11/25 月別グラフ追加 -->
+    <!-- 24/11/26 日別グラフ追加 -->
     <head>
         <title>Dog Walk List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -18,7 +18,7 @@
                 ]);
         
                 var options = {
-                    title: '月別時間',
+                    title: '月別平均時間',
                     colors: ['#a442f5'] ,
                     vAxis: {minValue:0,ticks:[0,30,60,90,120]},
                     hAxis: {title: '月'},
@@ -35,6 +35,33 @@
         );
     </script>
 
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+    [       '', '時間'],
+%daily_graph%
+            ]);
+    
+            var options = {
+                title: '日別時間',
+                colors: ['#a442f5'] ,
+                vAxis: {minValue:0,ticks:[0,30,60,90,120]},
+                hAxis: {title: '日'},
+                chartArea: { backgroundColor: '#e3d8ed' , left:50,right:30 },
+                backgroundColor: '#f5f0fa' ,
+                legend: {
+                    position: 'none'
+                }
+            };
+    
+            var chart = new google.visualization.ColumnChart(document.getElementById('daily_graph'));
+            chart.draw(data, options);
+        }
+    );
+</script>
+
 <body>
         <h1>Dog Walk List</h1>
         <span style="font-size:12px;">Ver : %version%</span>
@@ -48,6 +75,10 @@
             <tr><th>年月</th><th>総時間</th><th>平均</th></tr>
             %month_info% 
         </table>
+
+        <h2>日別グラフ</h2>
+        <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
         <h2>日別データ</h2>
         <table>
             <tr><th>日時</th><th>継続時間</th><th>回数</th></tr>
