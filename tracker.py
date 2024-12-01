@@ -12,10 +12,12 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-version = "2.14"       # 24/08/16
+# 24/08/16 v2.15  暫定年対応 
+version = "2.15"       
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
+# TODO: 年対応
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -151,7 +153,10 @@ def create_month_data() :
     endmm = today_date.month
     while curmm <= endmm :
         start = datetime.datetime(2024, curmm, 1)
-        end = datetime.datetime(2024, curmm+1, 1)
+        if curmm == 12 :               #  暫定修正  年対応が必要
+            end = datetime.datetime(2025, 1, 1)
+        else :        
+            end = datetime.datetime(2024, curmm+1, 1)
         df_mm = df_dd[(df_dd['date'] >= start) & (df_dd['date'] < end )]
         count  = df_mm['ptime'].count()
         if count == 0 :    #  データがなければ終了   月初の場合
