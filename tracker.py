@@ -12,12 +12,11 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/08/16 v2.15  暫定年対応 
-version = "2.15"       
+# 24/12/02 v2.16  年またぎの対応 
+version = "2.16"       
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
-# TODO: 年対応
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -150,13 +149,14 @@ def create_month_data() :
     global df_mon_pf,df_mon_vn,month_data_list
 
     curmm = 1
+    curyy = 2024
     endmm = today_date.month
     while curmm <= endmm :
-        start = datetime.datetime(2024, curmm, 1)
-        if curmm == 12 :               #  暫定修正  年対応が必要
-            end = datetime.datetime(2025, 1, 1)
+        start = datetime.datetime(curyy, curmm, 1)
+        if curmm == 12 :              
+            end = datetime.datetime(curyy+1, 1, 1)
         else :        
-            end = datetime.datetime(2024, curmm+1, 1)
+            end = datetime.datetime(curyy, curmm+1, 1)
         df_mm = df_dd[(df_dd['date'] >= start) & (df_dd['date'] < end )]
         count  = df_mm['ptime'].count()
         if count == 0 :    #  データがなければ終了   月初の場合
@@ -181,6 +181,9 @@ def create_month_data() :
         df_tmp_vn = pd.DataFrame({'yymm': [yymm], 'time': [v_sum]})
         df_mon_vn = pd.concat([df_mon_vn, df_tmp_vn])
         curmm += 1 
+        if curmm == 13 :
+            curyy += 1
+            curmm = 1
 
     df_mon_pf = df_mon_pf.reset_index(drop=True)
     df_mon_vn = df_mon_vn.reset_index(drop=True)
