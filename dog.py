@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/11/26 v1.03  日別グラフ追加
-version = "1.03"  
+# 24/12/03 v1.04  月別グラフに最大値追加
+version = "1.04"  
 
 # TODO: 
 
@@ -159,24 +159,16 @@ def create_df_month() :
 
     m_sum = df.resample(rule = "ME").sum()
     #m_ave = df.resample(rule = "ME").mean()
-    #m_max = df.resample(rule = "ME").max()
+    m_max = df.resample(rule = "ME").max()
     #m_min = df.resample(rule = "ME").min()
 
-    for index,row in m_sum.iterrows() :
-        if index.year == today_yy and index.month == today_mm:
-        # 現在の月の場合
-            days_in_month = today_dd
-        else:
-        # 過去の月の場合
-            days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
-        ave = row['ptime'] / days_in_month
-
     # 平均値列を追加
-    #df_month['ave_per_day'] = df_month.apply(calculate_average, axis=1)
     m_sum['day_ave'] = [
         calculate_average(idx, row['ptime']) for idx, row in m_sum.iterrows()
     ]
     df_month = m_sum
+    df_month['max'] = m_max
+    print(df_month)
 
 def calculate_average(index, ptime):
     if index.year == today_yy and index.month == today_mm:
@@ -190,8 +182,11 @@ def calculate_average(index, ptime):
 def month_info() :
     for index,row in df_month.iterrows() :
         date_str = index.month
-        out.write(f'<tr><td align="right">{date_str}</td><td align="right">{row["ptime"]}</td>'
-                  f'<td align="right">{row["day_ave"]:5.1f}</td></tr>')
+        total = minutes_to_hhmm(int(row["ptime"]))
+        ave = minutes_to_hhmm(int(row["day_ave"]))
+        max = minutes_to_hhmm(int(row["max"]))
+        out.write(f'<tr><td align="right">{date_str}</td><td align="right">{total}</td>'
+                  f'<td align="right">{ave}</td><td align="right">{max}</td></tr>')
 
 def month_graph() :
     for index,row in df_month.iterrows() :
