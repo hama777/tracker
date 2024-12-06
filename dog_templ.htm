@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/12/03 月別グラフに最大値追加 -->
+    <!-- 24/12/06 v1.05  日別情報を2列で表示 -->
     <head>
         <title>Dog Walk List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -67,6 +67,25 @@
         <span style="font-size:12px;">Ver : %version%</span>
         <span style="font-size:12px;">実行日時   : %today%</span>
 
+        <h2>日別グラフ</h2>
+        <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+
+        <h2>日別データ</h2>
+        <div class="flex">
+            <div class='frame'>
+                <table class="rank">
+                    <tr><th>日時</th><th>継続時間</th><th>回数</th></tr>
+                    %daily_info1% 
+                </table>
+            </div>
+            <div class='frame'>
+                <table class="rank">
+                    <tr><th>日時</th><th>継続時間</th><th>回数</th></tr>
+                    %daily_info2% 
+                </table>
+            </div>
+        </div>
+
         <h2>月別グラフ</h2>
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
@@ -76,14 +95,6 @@
             %month_info% 
         </table>
 
-        <h2>日別グラフ</h2>
-        <div id="daily_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
-
-        <h2>日別データ</h2>
-        <table>
-            <tr><th>日時</th><th>継続時間</th><th>回数</th></tr>
-            %daily_info% 
-        </table>
 
         <h2>明細データ</h2>
         <table>
