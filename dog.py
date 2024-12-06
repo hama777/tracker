@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/03 v1.04  月別グラフに最大値追加
-version = "1.04"  
+# 24/12/06 v1.05  日別情報を2列で表示
+version = "1.05"  
 
 # TODO: 
 
@@ -98,11 +98,27 @@ def read_data():
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
 
-def daily_info() :
+def daily_info(col) :
     df_tmp = df_dd.tail(30)
+    n = 0 
     for index , row in df_tmp.iterrows() :
+        n += 1
+        if multi_col(n,col) :
+            continue
         date_str = index.strftime("%m/%d(%a)")
         out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td><td align="right">{row["count"]}</td></tr>')
+
+#   複数カラムの場合の判定
+#     n  ...  何行目か     col ... 何カラム目か
+#     表示しない場合(continueする場合) true を返す
+def multi_col(n,col) :
+    if col == 1 :
+        if n > 15 :
+            return True
+    if col == 2 :
+        if n <= 15 :
+            return True
+    return False
 
 def daily_graph() :
     df_tmp = df_dd.tail(30)
@@ -168,7 +184,6 @@ def create_df_month() :
     ]
     df_month = m_sum
     df_month['max'] = m_max
-    print(df_month)
 
 def calculate_average(index, ptime):
     if index.year == today_yy and index.month == today_mm:
@@ -495,8 +510,11 @@ def parse_template() :
     f = open(templatefile , 'r', encoding='utf-8')
     out = open(resultfile,'w' ,  encoding='utf-8')
     for line in f :
-        if "%daily_info%" in line :
-            daily_info()
+        if "%daily_info1%" in line :
+            daily_info(1)
+            continue
+        if "%daily_info2%" in line :
+            daily_info(2)
             continue
         if "%daily_graph%" in line :
             daily_graph()
