@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/02 v2.16  年またぎの対応 
-version = "2.16"       
+# 24/12/08 v2.17 移動平均のグラフを180日間にする 
+version = "2.17"       
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
@@ -293,10 +293,9 @@ def output_ptime_to_csv():
     f.close()
 
 #  7日間の移動平均
-#  TODO:  30日間等期限つきにする
 def daily_movav_com(type) :
     mov_ave_dd = 7
-    df_movav  =  df_dd.copy()
+    df_movav  =  df_dd.tail(180).copy()
     if type == 0 :
         df_movav['mvave']  = df_movav['ptime'].rolling(mov_ave_dd).mean()
     else :
