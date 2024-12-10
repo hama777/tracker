@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/06 v1.05  日別情報を2列で表示
-version = "1.05"  
+# 24/12/10 v1.07  日別情報に max 値を表示
+version = "1.07"  
 
 # TODO: 
 
@@ -106,7 +106,10 @@ def daily_info(col) :
         if multi_col(n,col) :
             continue
         date_str = index.strftime("%m/%d(%a)")
-        out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td><td align="right">{row["count"]}</td></tr>')
+        ptime = minutes_to_hhmm(int(row["ptime"]))
+        dmax = minutes_to_hhmm(int(row["dmax"]))
+        out.write(f'<tr><td>{date_str}</td><td align="right">{ptime}</td>'
+                  f'<td align="right">{row["count"]}</td><td align="right">{dmax}</td></tr>')
 
 #   複数カラムの場合の判定
 #     n  ...  何行目か     col ... 何カラム目か
@@ -139,14 +142,18 @@ def totalling_daily_data() :
     global df_dd
 
     df_tmp = df
-    #daily_counts = df_tmp.groupby(df_tmp.index.date).size().reset_index(name='row_count')
+    #  日毎に集計しそのサイズ(回数)を求める
+    #  daily_counts は 日付 回数  をもつ df になる
     daily_counts = df_tmp.groupby(df_tmp.index.date).size()
-    #print(daily_counts)
+    #  日毎に集計しその最大値を求める
+    daily_max = df_tmp.groupby(df_tmp.index.date).max()
+    #print(daily_max)
 
     df_tmp  = df.resample('D')['ptime'].sum()
     date_list = []
     ptime_list = []
     count_list = []
+    max_list = []
     start_date  = datetime.date(2024, 1, 1)
     target_date = start_date
     end_date = datetime.date.today()
@@ -156,16 +163,20 @@ def totalling_daily_data() :
         try:
             ptime = df_tmp.loc[str_date]   # df_tmp のdateはstr型なのでstr型で比較
             count = daily_counts.loc[target_date]  # daily_counts のdateはdate型なのでdate型で比較
+            day_max_df = daily_max.loc[target_date]  # daily_counts のdateはdate型なのでdate型で比較
+            day_max = day_max_df['ptime']
         except KeyError:          #  日付のデータがなければ ptime は 0
             ptime = 0 
             count = 0 
+            day_max = 0
 
         date_list.append(target_date)
         ptime_list.append(ptime)
         count_list.append(count)
+        max_list.append(day_max)
         target_date +=  datetime.timedelta(days=1)
 
-    df_dd = pd.DataFrame(list(zip(date_list,ptime_list,count_list)), columns = ['date','ptime','count'])
+    df_dd = pd.DataFrame(list(zip(date_list,ptime_list,count_list,max_list)), columns = ['date','ptime','count','dmax'])
     df_dd['date'] = pd.to_datetime(df_dd["date"])
     df_dd = df_dd.set_index("date")
     #print(df_dd)
