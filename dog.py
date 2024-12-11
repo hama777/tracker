@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/10 v1.07  日別情報に max 値を表示
-version = "1.07"  
+# 24/12/11 v1.08  明細データを3列にした
+version = "1.08"  
 
 # TODO: 
 
@@ -130,11 +130,28 @@ def daily_graph() :
         ptime = row["ptime"]
         out.write(f"['{date_str}',{ptime}],") 
 
-def detail_info() :
-    df_tmp = df.tail(30)
+def detail_info(col) :
+    df_tmp = df.tail(90)
+    n = 0 
     for index , row in df_tmp.iterrows() :
+        n += 1
+        if multi_col2(n,col,30) :
+            continue
         date_str = index.strftime("%m/%d(%a) %H:%M")
         out.write(f'<tr><td>{date_str}</td><td align="right">{row["ptime"]}</td></tr>')
+
+def multi_col2(n,col,max) :
+    if col == 1 :
+        if n > max :
+            return True
+    if col == 2 :
+        if n <= max or n > max * 2 :
+            return True
+    if col == 3 :
+        if n <= max * 2 :
+            return True
+    return False
+
 
 #   1日ごとの練習時間を集計し  date ptime のカラムを持つ df  df_dd を作成する
 #   df_dd は ptime が 0 の日(データ)も含む     date は 2024年1月1日から実行前日まで
@@ -536,8 +553,14 @@ def parse_template() :
         if "%month_graph%" in line :
             month_graph()
             continue
-        if "%detail_info%" in line :
-            detail_info()
+        if "%detail_info1%" in line :
+            detail_info(1)
+            continue
+        if "%detail_info2%" in line :
+            detail_info(2)
+            continue
+        if "%detail_info3%" in line :
+            detail_info(3)
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
