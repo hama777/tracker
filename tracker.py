@@ -12,7 +12,7 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/01/02 v2.18 移動平均のグラフを180日間にする 
+# 25/01/02 v2.18 年対応
 version = "2.18"       
 
 # TODO:  pixela
