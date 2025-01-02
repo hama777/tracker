@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/08 v2.17 移動平均のグラフを180日間にする 
-version = "2.17"       
+# 25/01/02 v2.18 移動平均のグラフを180日間にする 
+version = "2.18"       
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
@@ -150,8 +150,12 @@ def create_month_data() :
 
     curmm = 1
     curyy = 2024
+    curyymm = curyy * 100 + curmm
     endmm = today_date.month
-    while curmm <= endmm :
+    endyy = today_date.year
+    endyymm = today_date.year * 100 + today_date.month
+
+    while curyymm  <= endyymm :
         start = datetime.datetime(curyy, curmm, 1)
         if curmm == 12 :              
             end = datetime.datetime(curyy+1, 1, 1)
@@ -184,6 +188,7 @@ def create_month_data() :
         if curmm == 13 :
             curyy += 1
             curmm = 1
+        curyymm = curyy * 100 + curmm
 
     df_mon_pf = df_mon_pf.reset_index(drop=True)
     df_mon_vn = df_mon_vn.reset_index(drop=True)
@@ -334,7 +339,6 @@ def minutes_to_hhmm(mm) :
 #   月別情報
 def month_info()  :
     #  年月  合計時間  1日平均時間  最大時間   無練習日率
-    #  TODO: 年は考慮していない
     
     for item in month_data_list :
         yymm,sum,ave,max,zero,vsum,vave,vmax,vzero = item
