@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/01/02 v2.18 年対応
-version = "2.18"       
+# 25/01/04 v2.19 年対応
+version = "2.19"       
 
 # TODO:  pixela
 # TODO: month_data_list を dataframe にする
@@ -176,7 +176,8 @@ def create_month_data() :
         ptime_zero = df_ptime_zero.sum()
         df_vtime_zero = (df_mm['vtime'] == 0)   # 時間が0 の日数
         vtime_zero = df_vtime_zero.sum()
-        yymm = 24 * 100 + curmm
+        #yymm = 24 * 100 + curmm
+        yymm = (curyy - 2000) * 100 + curmm
         tp = (yymm,p_sum,p_ave,p_max,ptime_zero,v_sum,v_ave,v_max,vtime_zero)
         month_data_list.append(tp)
 
