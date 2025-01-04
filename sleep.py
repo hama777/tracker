@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 24/10/11 v1.31  月別平均睡眠時間ランキング出力共通化
-version = "1.31"       
+# 25/01/04 v1.32  年対応
+version = "1.32"       
 
 # TODO:  pixela
 
@@ -253,7 +253,7 @@ def month_info_table() :
                 'end_ave','end_min','end_max']
 
     for dt , row in df_month.iterrows() :  
-        if not dt.year == 2024  :       #  今年分のみ表示
+        if dt.year < 2024  :       #  2024年以降のみ表示
             continue
         yy = dt.year
         mm = dt.month
