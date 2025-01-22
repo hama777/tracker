@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/01/04 v1.32  年対応
-version = "1.32"       
+# 25/01/22 v1.33  ランキングの日付に年表示を入れた
+version = "1.33"       
 
 # TODO:  pixela
 
@@ -190,7 +190,7 @@ def ranking_sleep_time_com(sort_df) :
     i = 0 
     for index , row in sort_df.head(10).iterrows() :  
         i = i + 1 
-        str_date = f'{index.strftime("%m")}/{index.strftime("%d")} ({index.strftime("%a")})'
+        str_date = f'{index.strftime("%y")}/{index.strftime("%m")}/{index.strftime("%d")} ({index.strftime("%a")})'
         if index.date() == lastdate :      # 最終データなら赤字にする
             str_date = f'<span class=red>{str_date}</span>'
 
@@ -203,26 +203,10 @@ def ranking_sleep_time_com(sort_df) :
 def rank_month_sleep_max() :
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
     rank_month_sleep_com(sort_df)
-    # i = 0 
-    # for dt , row in sort_df.head(10).iterrows() :  
-    #     i += 1
-    #     date_str = f'{dt.year}/{dt.month:02}' 
-    #     if dt.year == today_date.year and dt.month == today_date.month :
-    #         date_str = f'<span class=red>{date_str}</span>'
-    #     hhmm = conv_time_to_str(row['sleep_ave'])
-    #     out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
 def rank_month_sleep_min() :
     sort_df = df_month.sort_values('sleep_ave',ascending=True)
     rank_month_sleep_com(sort_df)
-    # i = 0 
-    # for dt , row in sort_df.head(10).iterrows() :  
-    #     i += 1
-    #     date_str = f'{dt.year}/{dt.month:02}' 
-    #     if dt.year == today_date.year and dt.month == today_date.month :
-    #         date_str = f'<span class=red>{date_str}</span>'
-    #     hhmm = conv_time_to_str(row['sleep_ave'])
-    #     out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
 
 def rank_month_sleep_com(sort_df) :
     i = 0 
