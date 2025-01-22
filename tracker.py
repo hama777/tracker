@@ -12,11 +12,12 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/01/04 v2.19 年対応
-version = "2.19"       
+# 25/01/22 v2.20 ランキングの日付に年表示を入れた
+version = "2.20"       
 
-# TODO:  pixela
+# TODO: pixela
 # TODO: month_data_list を dataframe にする
+# TODO: ranking と  ranking_month の共通化
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -425,7 +426,7 @@ def ranking() :
     i = 0 
     for _ , row in sort_df.iterrows() :
         i += 1 
-        date_str = row['date'].strftime('%m/%d (%a)')
+        date_str = row['date'].strftime('%y/%m/%d (%a)')
         if row['date'].date() == yesterday :   # row['date'] はdatetime型なのでdate()で日付部分のみ
             date_str = f'<span class=red>{date_str}</span>'
         hh = row['ptime'] // 60
