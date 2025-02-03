@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/01/22 v2.20 ランキングの日付に年表示を入れた
-version = "2.20"       
+# 25/02/03 v2.21 月別データの今月の判定誤り修正
+version = "2.21"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -346,7 +346,7 @@ def month_info()  :
         yymm,sum,ave,max,zero,vsum,vave,vmax,vzero = item
         yy = int(yymm / 100)
         mm =  yymm % 100
-        if mm  == today_mm :   #  今月なら 前日まで
+        if yy == today_yy - 2000 and mm  == today_mm :   #  今月なら 前日まで
             td = today_dd -1 
         else :
             td = calendar.monthrange(yy, mm)[1]   # 月の日数を取得 (月の初日の曜日, 月の日数)のタプルを返す。
@@ -396,7 +396,7 @@ def all_statistics() :
 def month_graph_com(df_mon) :
     for _ , row in df_mon.iterrows() :
         yymm = int(row['yymm'])
-        yy = int(yymm / 100) + 2000
+        yy = int(yymm / 100) + 2000   #  yy は西暦4桁
         mm = yymm % 100
         if yy == today_yy and mm == today_mm :
             n = today_dd - 1
