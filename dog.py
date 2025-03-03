@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 24/12/11 v1.08  明細データを3列にした
-version = "1.08"  
+# 25/03/03 v1.09  月別データの今月の平均値の計算方法修正
+version = "1.09"  
 
 # TODO: 
 
@@ -216,7 +216,10 @@ def create_df_month() :
 def calculate_average(index, ptime):
     if index.year == today_yy and index.month == today_mm:
         # 現在の月の場合
-        days_in_month = today_dd
+        dd = today_dd
+        if dd != 1 :
+            dd = dd -1           # 表示は昨日のデータなので今日の日付から -1 する
+        days_in_month = dd
     else:
         # 過去の月の場合
         days_in_month = index.days_in_month  # pandasのdatetime型で月の日数取得
