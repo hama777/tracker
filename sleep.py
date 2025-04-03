@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/01/22 v1.33  ランキングの日付に年表示を入れた
-version = "1.33"       
+# 25/04/03 v1.34  月別睡眠時間ランキングを20位までにした
+version = "1.34"       
 
 # TODO:  pixela
 
@@ -200,18 +200,20 @@ def ranking_sleep_time_com(sort_df) :
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
 
 #   月別平均睡眠時間ランキング
-def rank_month_sleep_max() :
+def rank_month_sleep_max(col) :
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
-    rank_month_sleep_com(sort_df)
+    rank_month_sleep_com(sort_df,col)
 
-def rank_month_sleep_min() :
+def rank_month_sleep_min(col) :
     sort_df = df_month.sort_values('sleep_ave',ascending=True)
-    rank_month_sleep_com(sort_df)
+    rank_month_sleep_com(sort_df,col)
 
-def rank_month_sleep_com(sort_df) :
+def rank_month_sleep_com(sort_df,col) :
     i = 0 
-    for dt , row in sort_df.head(10).iterrows() :  
+    for dt , row in sort_df.head(20).iterrows() :  
         i += 1
+        if multi_col(i,col,10) :
+            continue 
         date_str = f'{dt.year}/{dt.month:02}' 
         if dt.year == today_date.year and dt.month == today_date.month :
             date_str = f'<span class=red>{date_str}</span>'
@@ -316,6 +318,18 @@ def today(s):
     out.write(s)
     today = date.today()
 
+#   複数カラムの場合の判定
+#     n  ...  何行目か     col ... 何カラム目か  limit ... 行数
+#     表示しない場合(continueする場合) true を返す
+def multi_col(n,col,limit) :
+    if col == 1 :
+        if n > limit :
+            return True
+    if col == 2 :
+        if n <= limit :
+            return True
+    return False
+
 def parse_template() :
     global out 
     f = open(templatefile , 'r', encoding='utf-8')
@@ -354,11 +368,17 @@ def parse_template() :
         if "%rank_sleep_30_min% " in line :
             ranking_sleep_time_30_min()
             continue
-        if "%rank_month_sleep_max%" in line :
-            rank_month_sleep_max()
+        if "%rank_month_sleep_max1%" in line :
+            rank_month_sleep_max(1)
             continue
-        if "%rank_month_sleep_min%" in line :
-            rank_month_sleep_min()
+        if "%rank_month_sleep_max2%" in line :
+            rank_month_sleep_max(2)
+            continue
+        if "%rank_month_sleep_min1%" in line :
+            rank_month_sleep_min(1)
+            continue
+        if "%rank_month_sleep_min2%" in line :
+            rank_month_sleep_min(2)
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
