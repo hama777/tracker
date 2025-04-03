@@ -1,5 +1,5 @@
 <html>
-    <!-- 24/10/11 -->
+    <!-- 25/04/03 v1.34  月別睡眠時間ランキングを20位までにした -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -229,17 +229,31 @@
         <h2>月別睡眠時間ランキング</h2>
         <div class="flex">
             <div class='frame'>
-                <span style="margin-left: 30px;">最長時間</span>
+                <span style="margin-left: 30px;">最長時間(1)</span>
                 <table class="rank">
                     <tr><th>順位</th><th>時間</th><th>年月</th></tr>
-                    %rank_month_sleep_max% 
+                    %rank_month_sleep_max1% 
                 </table>
             </div>
             <div class='frame'>
-                <span style="margin-left: 30px;">最短時間</span>
+                <span style="margin-left: 30px;">最長時間(2)</span>
                 <table class="rank">
                     <tr><th>順位</th><th>時間</th><th>年月</th></tr>
-                    %rank_month_sleep_min% 
+                    %rank_month_sleep_max2% 
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">最短時間(1)</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>年月</th></tr>
+                    %rank_month_sleep_min1% 
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">最短時間(2)</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>年月</th></tr>
+                    %rank_month_sleep_min2% 
                 </table>
             </div>
         </div>
