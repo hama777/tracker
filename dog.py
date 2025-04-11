@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/03/03 v1.09  月別データの今月の平均値の計算方法修正
-version = "1.09"  
+# 25/04/11 v1.10 夕散歩の処理準備
+version = "1.10"  
 
 # TODO: 
 
@@ -66,8 +66,8 @@ def main_proc():
     # create_year_data_pf()
     # create_year_data_vn()
     parse_template()
+    #evening_walk()      debug
     ftp_upload()
-    # post_process_datafile()
     logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logf.close()
 
@@ -122,6 +122,19 @@ def multi_col(n,col) :
         if n <= 15 :
             return True
     return False
+
+#   夕散歩の統計
+#   夕散歩は 15時から19時とする
+def evening_walk() :
+    for index , row in df.iterrows() :
+        hh = index.hour
+        if hh < 15 or hh >= 19 :
+            continue
+        date_str = index.strftime("%m/%d(%a) %H:%M")
+        ptime = row["ptime"]
+        print(f'{date_str} : {ptime}\n')
+
+
 
 def daily_graph() :
     df_tmp = df_dd.tail(30)
@@ -358,18 +371,6 @@ def conv_yymm(yymm) :
     yy,mm = yymm.split("/")
     return int(yy) * 100 + int(mm)
     
-def post_process_datafile() :
-    if debug == 1 :
-        return 
-    if os.path.isfile(datafile) :
-        shutil.copyfile(datafile, backfile)
-        os.remove(datafile)
-    file = datadir + "/CSVReport.csv"
-    if os.path.isfile(file) :
-        os.remove(file)
-    file = datadir + "/report.png"
-    if os.path.isfile(file) :
-        os.remove(file)
 
 
 #   rawdata ファイルに yy/mm/dd,ptime,vtime の形式で全データを出力する
