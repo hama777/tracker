@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/04/11 v1.10 夕散歩の処理準備
-version = "1.10"  
+# 25/04/14 v1.11 夕散歩の処理開発
+version = "1.11"  
 
 # TODO: 
 
@@ -66,7 +66,7 @@ def main_proc():
     # create_year_data_pf()
     # create_year_data_vn()
     parse_template()
-    #evening_walk()      debug
+    #evening_walk()      #debug
     ftp_upload()
     logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logf.close()
@@ -126,14 +126,23 @@ def multi_col(n,col) :
 #   夕散歩の統計
 #   夕散歩は 15時から19時とする
 def evening_walk() :
+    global df_evenig
+    date_list = []
+    ptime_list = []
     for index , row in df.iterrows() :
         hh = index.hour
         if hh < 15 or hh >= 19 :
             continue
         date_str = index.strftime("%m/%d(%a) %H:%M")
         ptime = row["ptime"]
-        print(f'{date_str} : {ptime}\n')
-
+        date_list.append(index)
+        ptime_list.append(ptime)
+        #print(f'{date_str} : {ptime}\n')
+    df_evenig = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
+    df_evenig = df_evenig.set_index("date")
+    print(df_evenig)
+    df_tmp  = df_evenig.resample('ME')['ptime'].sum()
+    print(df_tmp)
 
 
 def daily_graph() :
