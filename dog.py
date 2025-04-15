@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/04/14 v1.11 夕散歩の処理開発
-version = "1.11"  
+# 25/04/15 v1.12 夕散歩の処理開発
+version = "1.12"  
 
 # TODO: 
 
@@ -66,7 +66,7 @@ def main_proc():
     # create_year_data_pf()
     # create_year_data_vn()
     parse_template()
-    #evening_walk()      #debug
+    evening_walk()      #debug
     ftp_upload()
     logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logf.close()
@@ -129,20 +129,30 @@ def evening_walk() :
     global df_evenig
     date_list = []
     ptime_list = []
+    start_list = []   # 開始時刻  0:00 からの分単位   平均値をとるため
     for index , row in df.iterrows() :
         hh = index.hour
         if hh < 15 or hh >= 19 :
             continue
         date_str = index.strftime("%m/%d(%a) %H:%M")
         ptime = row["ptime"]
+        start = index.time() 
+        start_mm = start.hour * 60 + start.minute 
+        start_list.append(start_mm)
         date_list.append(index)
         ptime_list.append(ptime)
         #print(f'{date_str} : {ptime}\n')
-    df_evenig = pd.DataFrame(list(zip(date_list,ptime_list)), columns = ['date','ptime'])
-    df_evenig = df_evenig.set_index("date")
-    print(df_evenig)
-    df_tmp  = df_evenig.resample('ME')['ptime'].sum()
+    df_evenig = pd.DataFrame(list(zip(date_list,start_list,ptime_list)), columns = ['edate','start','ptime'])
+    df_evenig = df_evenig.set_index("edate")
+    #print(df_evenig)
+    #df_tmp  = df_evenig.resample('ME')['ptime'].sum()
+    df_tmp  = df_evenig.groupby(df_evenig.index.to_period("M"))["ptime"].sum()
     print(df_tmp)
+
+    df_avg = df_evenig.groupby(df_evenig.index.to_period("M"))["start"].mean()
+    dt_start_avg = df_avg.apply(
+    lambda x: (datetime.datetime.min + pd.to_timedelta(x, unit='m')).time() )
+    print(dt_start_avg)
 
 
 def daily_graph() :
