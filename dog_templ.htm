@@ -1,5 +1,5 @@
 <html>
-    <!-- 25/04/17 v1.13 夕散歩の処理追加 -->
+    <!-- 25/04/21 v1.14 朝散歩の処理追加 -->
     <head>
         <title>Dog Walk List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -94,12 +94,17 @@
             <tr><th>年月</th><th>総時間</th><th>平均</th><th>最大</th></tr>
             %month_info% 
         </table>
+        <h3>朝散歩</h2>
+            <table>
+                <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
+                %morning_info% 
+            </table>
         <h3>夕散歩</h2>
             <table>
                 <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
                 %evening_info% 
             </table>
-    
+        
 
         <h2>明細データ</h2>
         <div class="flex">
