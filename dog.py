@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/04/17 v1.13 夕散歩の処理追加
-version = "1.13"  
+# 25/04/21 v1.14 朝散歩の処理追加
+version = "1.14"  
 
 # TODO: 
 
@@ -61,7 +61,8 @@ def main_proc():
     
     totalling_daily_data()
     create_df_month()
-    create_vening_dataframe()
+    create_evening_df()
+    create_morning_df()
     # output_ptime_to_csv()
     # create_month_data()
     # create_year_data_pf()
@@ -125,14 +126,26 @@ def multi_col(n,col) :
 
 #   夕散歩の統計  df_evenig を作成する
 #   夕散歩は 15時から19時とする
-def create_vening_dataframe() :
+def create_evening_df() :
     global df_evenig
+    df_evenig = create_period_df(16,19)
+
+#   朝散歩の統計  df_morning を作成する
+#   朝散歩は 5時から9時とする
+def create_morning_df() :
+    print("create_morning_df")
+    global df_morning
+    df_morning = create_period_df(5,9)
+    print(df_morning)
+
+#   start_hh 時からend_hh 時までの散歩のdfを作成し返却する
+def create_period_df(start_hh,end_hh) :
     date_list = []
     ptime_list = []
     start_list = []   # 開始時刻  0:00 からの分単位   平均値をとるため
     for index , row in df.iterrows() :
         hh = index.hour
-        if hh < 15 or hh >= 19 :
+        if hh < start_hh or hh >= end_hh :
             continue
         date_str = index.strftime("%m/%d(%a) %H:%M")
         ptime = row["ptime"]
@@ -141,33 +154,34 @@ def create_vening_dataframe() :
         start_list.append(start_mm)
         date_list.append(index)
         ptime_list.append(ptime)
-        #print(f'{date_str} : {ptime}\n')
     df_evenig_tmp = pd.DataFrame(list(zip(date_list,start_list,ptime_list)), columns = ['yymm','start','ptime'])
     df_evenig_tmp = df_evenig_tmp.set_index("yymm")
-    #df_tmp  = df_evenig.resample('ME')['ptime'].sum()
     df_ptime_tmp  = df_evenig_tmp.groupby(df_evenig_tmp.index.to_period("M"))["ptime"].mean()
     df_ptime_tmp.name = "ptime_ave"   # カラム名の設定
-    print(df_ptime_tmp)
+    #print(df_ptime_tmp)
 
     df_avg = df_evenig_tmp.groupby(df_evenig_tmp.index.to_period("M"))["start"].mean()
     df_avg.name = "ave"   # カラム名の設定
 
-    #print(df_avg.dtypes)
     df_start_avg = df_avg.apply(
     lambda x: (datetime.datetime.min + pd.to_timedelta(x, unit='m')).time() )  # 分単位から時刻に戻す
     df_start_avg.name = "start"
-    #print(dt_start_avg)
-    df_evenig = pd.merge(df_ptime_tmp,df_start_avg,on='yymm')  # シリーズをマージ  yymm をキーにする
-    print(df_evenig)
+    df_priod = pd.merge(df_ptime_tmp,df_start_avg,on='yymm')  # シリーズをマージ  yymm をキーにする
+    return(df_priod)
 
 def evening_info() :
-    for index,row in df_evenig.iterrows() :
+    period_info(df_evenig)
+
+def morning_info() :
+    period_info(df_morning)
+
+def period_info(df) :
+    for index,row in df.iterrows() :
         yymm = index
         ave = minutes_to_hhmm(int(row["ptime_ave"]))
         start = row["start"].strftime("%H:%M")
         out.write(f'<tr><td align="right">{yymm}</td><td align="right">{ave}</td>'
                   f'<td align="right">{start}</td></tr>')
-    
 
 def daily_graph() :
     df_tmp = df_dd.tail(30)
@@ -589,6 +603,9 @@ def parse_template() :
             continue
         if "%evening_info%" in line :
             evening_info()
+            continue
+        if "%morning_info%" in line :
+            morning_info()
             continue
         if "%month_graph%" in line :
             month_graph()
