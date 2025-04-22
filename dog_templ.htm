@@ -1,5 +1,5 @@
 <html>
-    <!-- 25/04/21 v1.14 朝散歩の処理追加 -->
+    <!-- 25/04/22 v1.15 朝夕散歩を横並びにした -->
     <head>
         <title>Dog Walk List</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -90,21 +90,29 @@
         <div id="month_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
 
         <h2>月別データ</h2>
-        <table>
-            <tr><th>年月</th><th>総時間</th><th>平均</th><th>最大</th></tr>
-            %month_info% 
-        </table>
-        <h3>朝散歩</h2>
-            <table>
-                <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
-                %morning_info% 
-            </table>
-        <h3>夕散歩</h2>
-            <table>
-                <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
-                %evening_info% 
-            </table>
-        
+        <div class="flex">
+            <div class='frame'>
+                <B>全体</B>
+                <table class="rank">
+                    <tr><th>年月</th><th>総時間</th><th>平均</th><th>最大</th></tr>
+                    %month_info% 
+                </table>
+            </div>
+            <div class='frame'>
+                <b>朝散歩</b>
+                <table class="rank">
+                    <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
+                    %morning_info% 
+                </table>
+            </div>
+            <div class='frame' >
+                <b>夕散歩</b>
+                <table class="rank">
+                    <tr><th>年月</th><th>平均継続時間</th><th>平均開始時刻</th></tr>
+                    %evening_info% 
+                </table>
+            </div>
+        </div>
 
         <h2>明細データ</h2>
         <div class="flex">
