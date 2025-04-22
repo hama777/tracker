@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/04/21 v1.14 朝散歩の処理追加
-version = "1.14"  
+# 25/04/22 v1.15 朝夕散歩を横並びにした
+version = "1.15"  
 
 # TODO: 
 
@@ -65,8 +65,6 @@ def main_proc():
     create_morning_df()
     # output_ptime_to_csv()
     # create_month_data()
-    # create_year_data_pf()
-    # create_year_data_vn()
     parse_template()
     ftp_upload()
     logf.write("\n=== end   %s === \n" % datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
@@ -125,7 +123,7 @@ def multi_col(n,col) :
     return False
 
 #   夕散歩の統計  df_evenig を作成する
-#   夕散歩は 15時から19時とする
+#   夕散歩は 16時から19時とする
 def create_evening_df() :
     global df_evenig
     df_evenig = create_period_df(16,19)
@@ -147,7 +145,6 @@ def create_period_df(start_hh,end_hh) :
         hh = index.hour
         if hh < start_hh or hh >= end_hh :
             continue
-        date_str = index.strftime("%m/%d(%a) %H:%M")
         ptime = row["ptime"]
         start = index.time() 
         start_mm = start.hour * 60 + start.minute 
@@ -158,7 +155,6 @@ def create_period_df(start_hh,end_hh) :
     df_evenig_tmp = df_evenig_tmp.set_index("yymm")
     df_ptime_tmp  = df_evenig_tmp.groupby(df_evenig_tmp.index.to_period("M"))["ptime"].mean()
     df_ptime_tmp.name = "ptime_ave"   # カラム名の設定
-    #print(df_ptime_tmp)
 
     df_avg = df_evenig_tmp.groupby(df_evenig_tmp.index.to_period("M"))["start"].mean()
     df_avg.name = "ave"   # カラム名の設定
@@ -337,14 +333,6 @@ def create_month_data() :
     df_mon_pf = df_mon_pf.reset_index(drop=True)
     df_mon_vn = df_mon_vn.reset_index(drop=True)
     #print(df_mon_vn)
-
-def create_year_data_pf() :
-    global df_yy_pf
-    df_yy_pf = create_year_data_com(df_mon_pf)
-
-def create_year_data_vn() :
-    global df_yy_vn
-    df_yy_vn = create_year_data_com(df_mon_vn)
 
 def create_year_data_com(df_mon) :
     cur = 0
