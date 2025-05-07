@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/04/03 v1.34  月別睡眠時間ランキングを20位までにした
-version = "1.34"       
+# 25/05/07 v1.35 就寝時刻24時超え対応
+version = "1.35"       
 
 # TODO:  pixela
 
@@ -81,11 +81,14 @@ def read_data():
                       columns = ['date','start','end','sleep'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
+    print(df)
 
 #  yyyy-mm-dd hh:mm 形式(str型)を分単位の数値に変換する
 def conv_datetime_to_minute(dt) :
     hh = int(dt[11:13])   # hh 部分を取り出す
     mm = int(dt[14:])     # mm 部分を取り出す
+    if hh <=3 :           #  3時台までは就寝時刻が24時を回ったとみなす
+        hh += 24
     return hh * 60 + mm
 
 def read_pastdata():
