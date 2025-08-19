@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/08/18 v1.36 年無視月集計関数追加
-version = "1.36"       
+# 25/08/19 v1.37 単独月別平均追加
+version = "1.37"       
 
 # TODO:  pixela
 
@@ -49,7 +49,7 @@ def main_proc():
     read_data()
     read_pastdata()
     create_df_month()
-    create_monthly_stats()  # 年を無視した月ごとの集計
+    create_df_monthly_only()  # 年を無視した月ごとの集計
     parse_template()
 
     ftp_upload()
@@ -82,19 +82,30 @@ def read_data():
                       columns = ['date','start','end','sleep'])
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
-    print(df)
 
 #   月ごとの集計  年は無視する  df_monthly を生成
-def create_monthly_stats() :
-    global df_monthly
-    df_monthly = (
+def create_df_monthly_only() :
+    global df_monthly_only
+    df_monthly_only = (
         df.groupby(df.index.month)
-        .agg(ave_end=("end", "mean"),
-            ave_sleep=("sleep", "mean"))
+        .agg(end=("end", "mean"),
+            sleep=("sleep", "mean"))
         .reset_index()
     )
-    df_monthly = df_monthly.rename(columns={"index": "mon", "date": "mon"})
-    print(df_monthly)
+    df_monthly_only = df_monthly_only.rename(columns={"index": "mon", "date": "mon"})
+    #print(df_monthly_only)
+
+def monthly_only_table() :
+    for index , row in df_monthly_only.iterrows() : 
+        mon = int(row["mon"] )
+        ave = int(row["sleep"])
+        ave_hh = ave // 60
+        ave_mm = ave % 60
+        end = int(row["end"])
+        end_hh = end // 60
+        end_mm = end % 60
+        out.write(f'<tr><td align=right>{mon}</td><td align=right>{ave_hh}:{ave_mm:02}</td>'
+                  f'<td align=right>{end_hh}:{end_mm:02}</td></tr>\n')
 
 #  yyyy-mm-dd hh:mm 形式(str型)を分単位の数値に変換する
 def conv_datetime_to_minute(dt) :
@@ -395,6 +406,9 @@ def parse_template() :
             continue
         if "%rank_month_sleep_min2%" in line :
             rank_month_sleep_min(2)
+            continue
+        if "%monthly_only_table%" in line :
+            monthly_only_table()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
