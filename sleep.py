@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/08/19 v1.37 単独月別平均追加
-version = "1.37"       
+# 25/08/21 v1.39 単独月別平均情報を2017年からにした
+version = "1.39"       
 
 # TODO:  pixela
 
@@ -87,13 +87,12 @@ def read_data():
 def create_df_monthly_only() :
     global df_monthly_only
     df_monthly_only = (
-        df.groupby(df.index.month)
-        .agg(end=("end", "mean"),
-            sleep=("sleep", "mean"))
+        df_all.groupby(df_all.index.month)
+        .agg(end=("end_ave", "mean"),
+            sleep=("sleep_ave", "mean"))
         .reset_index()
     )
     df_monthly_only = df_monthly_only.rename(columns={"index": "mon", "date": "mon"})
-    #print(df_monthly_only)
 
 def monthly_only_table() :
     for index , row in df_monthly_only.iterrows() : 
@@ -106,6 +105,13 @@ def monthly_only_table() :
         end_mm = end % 60
         out.write(f'<tr><td align=right>{mon}</td><td align=right>{ave_hh}:{ave_mm:02}</td>'
                   f'<td align=right>{end_hh}:{end_mm:02}</td></tr>\n')
+
+def monthly_only_graph() :
+    for index , row in df_monthly_only.iterrows() : 
+        mon = int(row["mon"] )
+        ave = int(row["sleep"])
+        out.write(f"['{mon}',[{conv_time_to_graph_str(ave)}]],")
+
 
 #  yyyy-mm-dd hh:mm 形式(str型)を分単位の数値に変換する
 def conv_datetime_to_minute(dt) :
@@ -140,6 +146,7 @@ def read_pastdata():
 
     columns = ['sleep_ave','sleep_min','sleep_max','start_ave','start_min','start_max','end_ave','end_min','end_max']
     df_all = pd.DataFrame(data=row_list,  index=date_list,  columns=columns)
+    df_all.index = pd.to_datetime(df_all.index)
 
 def daily_graph() :
     for index , row in df.tail(30).iterrows() :    
@@ -409,6 +416,9 @@ def parse_template() :
             continue
         if "%monthly_only_table%" in line :
             monthly_only_table()
+            continue
+        if "%monthly_only_graph%" in line :
+            monthly_only_graph()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
