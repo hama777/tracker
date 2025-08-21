@@ -1,5 +1,5 @@
 <html>
-    <!-- 25/08/19 v1.37 単独月別平均追加 -->
+    <!-- 25/08/20 v1.38 単独月別平均グラフ追加 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -164,6 +164,31 @@
         }
     );
 </script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+    [       '', '時間'],
+%monthly_only_graph%
+            ]);
+    
+            var options = {
+                title: '月別時間',
+                colors: ['#32a89d'] ,
+                hAxis: {title: '月'},
+                chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
+                backgroundColor: '#cfe6e3' ,
+                legend: {
+                    position: 'none'
+                }
+            };
+    
+            var chart = new google.visualization.ColumnChart(document.getElementById('monthly_only_graph'));
+            chart.draw(data, options);
+        }
+    );
+</script>
 
 <body>
         <h1>Sleep Time</h1>
@@ -262,7 +287,8 @@
             <tr><th>月</th><th>睡眠時間</th><th>起床時刻</th></tr>
             %monthly_only_table% 
         </table>
-
+        <div id="monthly_only_graph" style="width:500px; height:350px;  margin-top:20px ; margin-left:  50px; " ></div>
+        
 
 
     </body>
