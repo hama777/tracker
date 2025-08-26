@@ -1,5 +1,5 @@
 <html>
-    <!-- 25/08/20 v1.38 単独月別平均グラフ追加 -->
+    <!-- 25/08/26 単独月別平均を横並びにした -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -283,13 +283,16 @@
             </div>
         </div>
         <h2>単独月別平均</h2>
-        <table>
-            <tr><th>月</th><th>睡眠時間</th><th>起床時刻</th></tr>
-            %monthly_only_table% 
-        </table>
-        <div id="monthly_only_graph" style="width:500px; height:350px;  margin-top:20px ; margin-left:  50px; " ></div>
-        
-
-
+        <div class="flex">
+            <div>
+                <table>
+                    <tr><th>月</th><th>睡眠時間</th><th>起床時刻</th></tr>
+                    %monthly_only_table% 
+                </table>
+            </div>
+            <div>
+                <div id="monthly_only_graph" style="width:500px; height:350px;  margin-top:3px ; margin-left:  50px; " ></div>
+            </div>
+        </div>
     </body>
 </html>
