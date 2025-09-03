@@ -6,15 +6,15 @@ import os
 import csv
 import datetime
 
-#  25/08/29 v0.02
-version = "0.02"       
+#  25/09/03 v0.03 アカウントファイル名変更
+version = "0.03"       
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
 conffile = appdir + "/insta.conf"
-acctdata = appdir + "/acct.txt"
-resultfile = appdir + "/instares.txt"
+acctdata = appdir + "/instaacct.txt"
+resultfile = appdir + "/instadata.txt"
 instance = ""
 acctinfo = {}
 
