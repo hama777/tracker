@@ -7,13 +7,12 @@ import csv
 import datetime
 from ftplib import FTP_TLS
 
-#  25/09/04 v0.01 フォロワー数グラフ追加
-version = "0.01"       
+#  25/09/04 v0.02 バグ修正
+version = "0.02"       
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
 
-conffile = appdir + "/insta.conf"
 acctdata = appdir + "/instaacct.txt"
 datafile = appdir + "/instadata.txt"
 templatefile = appdir + "/insta_templ.htm"
@@ -23,10 +22,10 @@ conffile = appdir + "/tracker.conf"
 acctinfo = {}    #  キー  アカウントID  値  辞書  キー  acctname アカウント名   start 記録開始日付
 
 def main_proc():
-    global instance
+    global ftp_url
     read_config() 
     if debug == 0 :
-        ftp_url = ftp_url.replace("index.htm","inasta.htm")
+        ftp_url = ftp_url.replace("index.htm","insta.htm")
     date_settings()
     read_acctdata()
     read_resdata()
@@ -83,6 +82,7 @@ def ftp_upload() :
         return 
     with FTP_TLS(host=ftp_host, user=ftp_user, passwd=ftp_pass) as ftp:
         ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
+    print("ftp " + ftp_url)
 
 def read_config() : 
     global ftp_host,ftp_user,ftp_pass,ftp_url,debug,datadir,pixela_url,pixela_token
@@ -100,6 +100,7 @@ def read_config() :
     pixela_token = conf.readline().strip()
     debug = int(conf.readline().strip())
     conf.close()
+    print(ftp_url)
 
 def date_settings():
     global  today_date
