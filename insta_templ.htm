@@ -1,0 +1,46 @@
+<html>
+    <!-- 25/09/04 v0.01 フォロワー数グラフ追加 -->
+    <head>
+        <title>Sleep Time</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <link rel="stylesheet" href="sleep.css">
+    </head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+        google.setOnLoadCallback(
+            function() {
+                var data = google.visualization.arrayToDataTable([
+        [       '', '時間'],
+    %follower_graph%
+                ]);
+        
+                var options = {
+                    title: '日別時間',
+                    colors: ['#32a89d'] ,
+                    hAxis: {title: '日付'},
+                    chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
+                    backgroundColor: '#cfe6e3' ,
+                    legend: {
+                        position: 'none'
+                    }
+                };
+        
+                var chart = new google.visualization.LineChart(document.getElementById('follower_graph'));
+                chart.draw(data, options);
+            }
+        );
+    </script>
+
+
+    <body>
+        <h1>Insta Info</h1>
+        <span style="font-size:12px;">Ver : %version%</span>
+        <span style="font-size:12px;">実行日時   : %today%</span>
+
+        <h2>ショコラ フォロワー数グラフ</h2>
+        <div id="follower_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+    </body>
+</html>
