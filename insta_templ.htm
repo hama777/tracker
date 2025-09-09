@@ -1,39 +1,72 @@
 <html>
-    <!-- 25/09/04 v0.01 フォロワー数グラフ追加 -->
+    <!-- 25/09/09 v0.02 スマホ対応 メディアクエリ追加 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta http-equiv="Content-Style-Type" content="text/css">
+        <!-- スマホ表示対応 -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="sleep.css">
-    </head>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
+        <style>
+            /* デフォルト（PC向け） */
+            #follower_graph {
+                width: 900px;
+                height: 400px;
+                margin-top: 20px;
+                margin-left: 50px;
+            }
+
+            /* スマホ向け */
+            @media screen and (max-width: 600px) {
+                #follower_graph {
+                    width: 95% !important;  /* 画面幅に合わせる */
+                    height: 250px;          /* 高さを少し小さく */
+                    margin: 10px auto;      /* 中央寄せ */
+                }
+                h1 {
+                    font-size: 20px;
+                }
+                h2 {
+                    font-size: 16px;
+                }
+                span {
+                    display: block; /* 日時やバージョンを改行して見やすく */
+                    font-size: 12px;
+                }
+            }
+        </style>
+    </head>
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
         google.load("visualization", "1", {packages:["corechart"]});
         google.setOnLoadCallback(
             function() {
                 var data = google.visualization.arrayToDataTable([
-        [       '', '時間'],
-    %follower_graph%
+                    ['', '時間'],
+                    %follower_graph%
                 ]);
-        
+
                 var options = {
                     title: '日別時間',
-                    colors: ['#32a89d'] ,
+                    colors: ['#32a89d'],
                     hAxis: {title: '日付'},
-                    chartArea: { backgroundColor: '#f5f3e4' , left:50,right:30 },
-                    backgroundColor: '#cfe6e3' ,
-                    legend: {
-                        position: 'none'
-                    }
+                    chartArea: { backgroundColor: '#f5f3e4', left:50, right:30 },
+                    backgroundColor: '#cfe6e3',
+                    legend: { position: 'none' }
                 };
-        
+
                 var chart = new google.visualization.LineChart(document.getElementById('follower_graph'));
                 chart.draw(data, options);
+
+                // ウィンドウサイズ変更時にもリサイズ
+                window.addEventListener('resize', function(){
+                    chart.draw(data, options);
+                });
             }
         );
     </script>
-
 
     <body>
         <h1>Insta Info</h1>
@@ -41,6 +74,6 @@
         <span style="font-size:12px;">実行日時   : %today%</span>
 
         <h2>ショコラ フォロワー数グラフ</h2>
-        <div id="follower_graph" style="width:900px; height:400px;  margin-top:20px ; margin-left:  50px; " ></div>
+        <div id="follower_graph"></div>
     </body>
 </html>
