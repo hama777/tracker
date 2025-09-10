@@ -7,8 +7,8 @@ import csv
 import datetime
 from ftplib import FTP_TLS
 
-#  25/09/04 v0.02 バグ修正
-version = "0.02"       
+#  25/09/09 v0.03 フォロワー数比較グラフ追加  
+version = "0.03"       
 
 debug = 0     #  1 ... debug
 appdir = os.path.dirname(os.path.abspath(__file__))
@@ -45,23 +45,57 @@ def read_acctdata() :
     #print(acctinfo)
 
 def read_resdata() :
-    global hist_date,hist_follow
+    global hist_date,hist_follow,insta_info
     hist_date = []
     hist_follow = []
+    insta_info = {}
     with open(datafile,encoding='utf-8') as f:
         reader = csv.reader(f, delimiter='\t')
         for row in reader:
             date_str = row[0]
             acctid = row[1]
+            post = row[2]
             follow = row[3]
+            acct_val = {}
+            acct_val['follow'] = follow
+            acct_val['post'] = post
+            insta_info[acctid] = acct_val
+            
             if acctid != "runa.chocolat.dog" :
                 continue 
             hist_date.append(date_str)
             hist_follow.append(follow)
+    #print(acct_info)
 
 def number_of_followers() :
     for dt , fo in zip(hist_date,hist_follow) :
-        out.write(f"['{dt}',{fo}],")
+        date_str = dt[3:]
+        out.write(f"['{date_str}',{fo}],")
+
+def compare_follower() :
+    bar_color_list = ['#32a89d', '#f39c12', '#3498db', '#e74c3c']
+    n= 0 
+    for accid,v in insta_info.items() :
+        follow = v['follow']
+        act = acctinfo[accid]
+        actname = act['acctname']
+        out.write(f"['{actname}',{follow},'{bar_color_list[n]}'],")
+        n += 1
+
+
+def date_settings():
+    global  today_date,today_mm,today_dd,today_yy,lastdate,today_datetime
+    today_datetime = datetime.datetime.today()
+    today_date = datetime.date.today()
+    today_mm = today_date.month
+    today_dd = today_date.day
+    today_yy = today_date.year
+
+def today(s):
+    global today_date
+    d = today_datetime.strftime("%m/%d %H:%M")
+    s = s.replace("%today%",d)
+    out.write(s)
 
 def parse_template() :
     global out 
@@ -70,6 +104,16 @@ def parse_template() :
     for line in f :
         if "%follower_graph%" in line :
             number_of_followers()
+            continue
+        if "%compare_follower_graph%" in line :
+            compare_follower()
+            continue
+        if "%version%" in line :
+            s = line.replace("%version%",version)
+            out.write(s)
+            continue
+        if "%today%" in line :
+            today(line)
             continue
 
         out.write(line)
@@ -101,10 +145,6 @@ def read_config() :
     debug = int(conf.readline().strip())
     conf.close()
     print(ftp_url)
-
-def date_settings():
-    global  today_date
-    today_date = datetime.date.today()
 
 # ----------------------------------------------------------
 main_proc()
