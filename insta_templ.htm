@@ -1,7 +1,7 @@
 <html>
-    <!-- 25/09/09 v0.02 スマホ対応 メディアクエリ追加 -->
+    <!-- 25/09/09 v0.03 フォロワー数比較グラフ追加   -->
     <head>
-        <title>Sleep Time</title>
+        <title>Chocolat</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta http-equiv="Content-Style-Type" content="text/css">
         <!-- スマホ表示対応 -->
@@ -16,10 +16,16 @@
                 margin-top: 20px;
                 margin-left: 50px;
             }
+            #compare_follower_graph {
+                width: 400px;
+                height: 300px;
+                margin-top: 20px;
+                margin-left: 50px;
+            }
 
             /* スマホ向け */
             @media screen and (max-width: 600px) {
-                #follower_graph {
+                #follower_graph, #compare_follower_graph {
                     width: 95% !important;  /* 画面幅に合わせる */
                     height: 250px;          /* 高さを少し小さく */
                     margin: 10px auto;      /* 中央寄せ */
@@ -49,7 +55,7 @@
                 ]);
 
                 var options = {
-                    title: '日別時間',
+                    title: 'フォロワー数推移',
                     colors: ['#32a89d'],
                     hAxis: {title: '日付'},
                     chartArea: { backgroundColor: '#f5f3e4', left:50, right:30 },
@@ -68,12 +74,43 @@
         );
     </script>
 
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(
+        function() {
+            var data = google.visualization.arrayToDataTable([
+                ['名前', '時間',{ role: 'style' }],
+                %compare_follower_graph%
+            ]);
+
+            var options = {
+                title: 'フォロワー数比較',
+                colors: ['#32a89d'],
+                hAxis: {title: '日付'},
+                chartArea: { backgroundColor: '#f5f3e4', left:50, right:30 },
+                backgroundColor: '#cfe6e3',
+                legend: { position: 'none' }
+            };
+
+            var chart = new google.visualization.ColumnChart(document.getElementById('compare_follower_graph'));
+            chart.draw(data, options);
+
+            // ウィンドウサイズ変更時にもリサイズ
+            window.addEventListener('resize', function(){
+                chart.draw(data, options);
+            });
+        }
+    );
+</script>
+
     <body>
-        <h1>Insta Info</h1>
+        <h1>ショコラ</h1>
         <span style="font-size:12px;">Ver : %version%</span>
         <span style="font-size:12px;">実行日時   : %today%</span>
 
         <h2>ショコラ フォロワー数グラフ</h2>
         <div id="follower_graph"></div>
+        <h2>フォロワー数比較</h2>
+        <div id="compare_follower_graph"></div>
     </body>
 </html>
