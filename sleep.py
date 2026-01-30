@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 25/08/21 v1.39 単独月別平均情報を2017年からにした
-version = "1.39"       
+# 26/01/30 v1.40 カラム処理変更
+version = "1.40"       
 
 # TODO:  pixela
 
@@ -37,6 +37,8 @@ out = ""
 logf = ""
 pixela_url = ""
 pixela_token = ""
+rank_month_sleep_max_col = 0 
+rank_month_sleep_min_col = 0
 
 def main_proc():
     global  logf,ftp_url
@@ -234,13 +236,17 @@ def ranking_sleep_time_com(sort_df) :
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hh}:{mm:02}</td><td>{str_date}</td></tr>")
 
 #   月別平均睡眠時間ランキング
-def rank_month_sleep_max(col) :
+def rank_month_sleep_max() :
+    global rank_month_sleep_max_col 
+    rank_month_sleep_max_col += 1
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
-    rank_month_sleep_com(sort_df,col)
+    rank_month_sleep_com(sort_df,rank_month_sleep_max_col)
 
-def rank_month_sleep_min(col) :
+def rank_month_sleep_min() :
+    global rank_month_sleep_min_col
+    rank_month_sleep_min_col += 1
     sort_df = df_month.sort_values('sleep_ave',ascending=True)
-    rank_month_sleep_com(sort_df,col)
+    rank_month_sleep_com(sort_df,rank_month_sleep_min_col)
 
 def rank_month_sleep_com(sort_df,col) :
     i = 0 
@@ -402,17 +408,11 @@ def parse_template() :
         if "%rank_sleep_30_min% " in line :
             ranking_sleep_time_30_min()
             continue
-        if "%rank_month_sleep_max1%" in line :
-            rank_month_sleep_max(1)
+        if "%rank_month_sleep_max%" in line :
+            rank_month_sleep_max()
             continue
-        if "%rank_month_sleep_max2%" in line :
-            rank_month_sleep_max(2)
-            continue
-        if "%rank_month_sleep_min1%" in line :
-            rank_month_sleep_min(1)
-            continue
-        if "%rank_month_sleep_min2%" in line :
-            rank_month_sleep_min(2)
+        if "%rank_month_sleep_min%" in line :
+            rank_month_sleep_min()
             continue
         if "%monthly_only_table%" in line :
             monthly_only_table()
