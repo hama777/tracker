@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 25/02/03 v2.21 月別データの今月の判定誤り修正
-version = "2.21"       
+# 26/02/04 v2.22 month_data_list dataframe化
+version = "2.22"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -194,11 +194,21 @@ def create_month_data() :
 
     df_mon_pf = df_mon_pf.reset_index(drop=True)
     df_mon_vn = df_mon_vn.reset_index(drop=True)
-    #print(df_mon_vn)
+    # カラム名を定義
+    columns = [
+        "yymm",
+        "p_sum", "p_ave", "p_max", "ptime_zero",
+        "v_sum", "v_ave", "v_max", "vtime_zero"
+    ]
+
+    # DataFrame作成
+    df_mon_data = pd.DataFrame(month_data_list, columns=columns)
+    print(df_mon_data)
 
 def create_year_data_pf() :
     global df_yy_pf
     df_yy_pf = create_year_data_com(df_mon_pf)
+    print(df_yy_pf)
 
 def create_year_data_vn() :
     global df_yy_vn
