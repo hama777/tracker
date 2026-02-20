@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 26/02/04 v2.22 month_data_list dataframe化
-version = "2.22"       
+# 26/02/20 v2.23 df_year 作成処理追加
+version = "2.23"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -47,6 +47,7 @@ df_yy_pf = ""    #  年毎の時間  pf
 df_yy_vn = ""    #  年毎の時間  vn
 month_data_list = []  # 月ごとの情報 (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 df_dd = ""    #  日ごとのデータ df  pf 用
+df_year = ""     #  PF vn 両方の年データ 2024 から  year p_sum p_max v_sum v_max
 today_date = ""   # 今日の日付  datetime型
 
 def main_proc():
@@ -147,7 +148,7 @@ def totalling_daily_data() :
 # 月ごとの情報 month_data_list と df_mon_pf を作成する
 # month_data_list は (yymm,sum,mean,max,zero) のタプルを要素とするリスト
 def create_month_data() :
-    global df_mon_pf,df_mon_vn,month_data_list
+    global df_mon_pf,df_mon_vn,month_data_list,df_mon_data
 
     curmm = 1
     curyy = 2024
@@ -203,12 +204,29 @@ def create_month_data() :
 
     # DataFrame作成
     df_mon_data = pd.DataFrame(month_data_list, columns=columns)
-    print(df_mon_data)
+    create_df_year()
+
+def create_df_year():
+
+    # 1. 「年」のカラムを作成（yymmを100で割って24の部分を取り出す）
+    df_mon_data['year'] = df_mon_data['yymm'] // 100
+
+    # 2. 年ごとに集計（p_sumは合計、p_maxは最大値）
+    df_year = df_mon_data.groupby('year').agg({
+        'p_sum': 'sum',
+        'p_max': 'max',
+        'ptime_zero' : 'sum' ,
+        'v_sum': 'sum',
+        'v_max': 'max',
+        'vtime_zero' : 'sum' 
+    }).reset_index()
+
+    # 結果の確認
+    print(df_year)
 
 def create_year_data_pf() :
     global df_yy_pf
     df_yy_pf = create_year_data_com(df_mon_pf)
-    print(df_yy_pf)
 
 def create_year_data_vn() :
     global df_yy_vn
@@ -233,7 +251,6 @@ def create_year_data_com(df_mon) :
     ptime_list.append(ptime)
     df_yy = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','time'])
     return(df_yy)
-    #print(df_yy_pf)
 
 def date_settings():
     global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
