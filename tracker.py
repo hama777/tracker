@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 26/02/20 v2.23 df_year 作成処理追加
-version = "2.23"       
+# 26/02/24 v2.24 年集計表追加
+version = "2.24"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -207,6 +207,7 @@ def create_month_data() :
     create_df_year()
 
 def create_df_year():
+    global df_year
 
     # 1. 「年」のカラムを作成（yymmを100で割って24の部分を取り出す）
     df_mon_data['year'] = df_mon_data['yymm'] // 100
@@ -223,6 +224,21 @@ def create_df_year():
 
     # 結果の確認
     print(df_year)
+
+def year_info() :
+    print(today_yy)
+    for _ , row in df_year.iterrows() :
+        yy = row["year"]
+        ptime = row["p_sum"]
+        if yy == today_yy -2000:
+            start = datetime.date(yy+2000,1,1)   # 1/1
+            dd = today_date - start         # 1/1 からの日数
+            print(dd.days)
+            ptime = ptime  / dd.days
+        else  :
+            ptime = ptime  / 365
+
+        out.write(f'<tr><td>{row["year"]}</td><td>{ptime:5.2f}</td></tr>\n')
 
 def create_year_data_pf() :
     global df_yy_pf
@@ -258,7 +274,7 @@ def date_settings():
     today_date = datetime.date.today()
     today_mm = today_date.month
     today_dd = today_date.day
-    today_yy = today_date.year
+    today_yy = today_date.year   #  4桁
     yesterday = today_date - timedelta(days=1)
 
 #   pf と vn で過去データの数が違うので df は別に持つ
@@ -528,6 +544,9 @@ def parse_template() :
             continue
         if "%year_graph_vn%" in line :
             year_graph_com(df_yy_vn)
+            continue
+        if "%year_info%" in line :
+            year_info()
             continue
         if "%version%" in line :
             s = line.replace("%version%",version)
