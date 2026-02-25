@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 26/02/24 v2.24 年集計表追加
-version = "2.24"       
+# 26/02/25 v2.25 年集計表追加
+version = "2.25"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -230,15 +230,15 @@ def year_info() :
     for _ , row in df_year.iterrows() :
         yy = row["year"]
         ptime = row["p_sum"]
+        zero = row["ptime_zero"]
         if yy == today_yy -2000:
-            start = datetime.date(yy+2000,1,1)   # 1/1
-            dd = today_date - start         # 1/1 からの日数
-            print(dd.days)
-            ptime = ptime  / dd.days
+            ptime = ptime  / today_days
+            zero_rate = zero / today_days * 100
         else  :
             ptime = ptime  / 365
-
-        out.write(f'<tr><td>{row["year"]}</td><td>{ptime:5.2f}</td></tr>\n')
+            zero_rate = zero / 365 * 100
+        out.write(f'<tr><td>{row["year"]}</td><td>{ptime:5.2f}</td><td>{row["p_max"]}</td>'
+                  f'<td>{zero}</td><td>{zero_rate:5.2f}</td></tr>\n')
 
 def create_year_data_pf() :
     global df_yy_pf
@@ -268,14 +268,6 @@ def create_year_data_com(df_mon) :
     df_yy = pd.DataFrame(list(zip(yy_list,ptime_list)), columns = ['yy','time'])
     return(df_yy)
 
-def date_settings():
-    global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime
-    today_datetime = datetime.datetime.today()
-    today_date = datetime.date.today()
-    today_mm = today_date.month
-    today_dd = today_date.day
-    today_yy = today_date.year   #  4桁
-    yesterday = today_date - timedelta(days=1)
 
 #   pf と vn で過去データの数が違うので df は別に持つ
 def read_pastdata():
@@ -454,9 +446,7 @@ def year_graph_com(df_yy) :
         yy = row['yy']
         ptime = row['time'] 
         if yy == (today_yy - 2000) :
-            start = datetime.date(yy+2000,1,1)   # 1/1
-            dd = today_date - start         # 1/1 からの日数
-            ptime = ptime  / dd.days
+            ptime = ptime  / today_days
         else :
             ptime = ptime  / 365
 
@@ -501,6 +491,18 @@ def ftp_upload() :
         return 
     with FTP_TLS(host=ftp_host, user=ftp_user, passwd=ftp_pass) as ftp:
         ftp.storbinary('STOR {}'.format(ftp_url), open(resultfile, 'rb'))
+
+def date_settings():
+    global  today_date,today_mm,today_dd,today_yy,yesterday,today_datetime,today_days
+    today_datetime = datetime.datetime.today()
+    today_date = datetime.date.today()
+    today_mm = today_date.month
+    today_dd = today_date.day
+    today_yy = today_date.year   #  4桁
+    yesterday = today_date - timedelta(days=1)
+    start = datetime.date(today_yy,1,1)   # 1/1
+    dd = today_date - start      
+    today_days = dd.days         # 1/1 からの日数
 
 def today(s):
     d = today_datetime.strftime("%m/%d %H:%M")
