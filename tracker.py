@@ -12,8 +12,8 @@ from ftplib import FTP_TLS
 from datetime import date,timedelta
 import calendar
 
-# 26/02/25 v2.25 年集計表追加
-version = "2.25"       
+# 26/02/26 v2.26 年集計表データを右寄せにする
+version = "2.26"       
 
 # TODO: pixela
 # TODO: month_data_list を dataframe にする
@@ -237,8 +237,8 @@ def year_info() :
         else  :
             ptime = ptime  / 365
             zero_rate = zero / 365 * 100
-        out.write(f'<tr><td>{row["year"]}</td><td>{ptime:5.2f}</td><td>{row["p_max"]}</td>'
-                  f'<td>{zero}</td><td>{zero_rate:5.2f}</td></tr>\n')
+        out.write(f'<tr><td>{row["year"]}</td><td align="right">{ptime:5.2f}</td><td align="right">{row["p_max"]}</td>'
+                  f'<td align="right">{zero}</td><td align="right">{zero_rate:5.2f}</td></tr>\n')
 
 def create_year_data_pf() :
     global df_yy_pf
