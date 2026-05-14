@@ -12,8 +12,8 @@ from datetime import date,timedelta
 import math
 import numpy as np
 
-# 26/01/30 v1.40 カラム処理変更
-version = "1.40"       
+# 26/05/14 v1.41 月別起床時刻ランキング追加
+version = "1.41"       
 
 # TODO:  pixela
 
@@ -39,6 +39,7 @@ pixela_url = ""
 pixela_token = ""
 rank_month_sleep_max_col = 0 
 rank_month_sleep_min_col = 0
+rank_month_end_min_col = 0
 
 def main_proc():
     global  logf,ftp_url
@@ -240,15 +241,15 @@ def rank_month_sleep_max() :
     global rank_month_sleep_max_col 
     rank_month_sleep_max_col += 1
     sort_df = df_month.sort_values('sleep_ave',ascending=False)
-    rank_month_sleep_com(sort_df,rank_month_sleep_max_col)
+    rank_month_sleep_com(sort_df,rank_month_sleep_max_col,'sleep_ave')
 
 def rank_month_sleep_min() :
     global rank_month_sleep_min_col
     rank_month_sleep_min_col += 1
     sort_df = df_month.sort_values('sleep_ave',ascending=True)
-    rank_month_sleep_com(sort_df,rank_month_sleep_min_col)
+    rank_month_sleep_com(sort_df,rank_month_sleep_min_col,'sleep_ave')
 
-def rank_month_sleep_com(sort_df,col) :
+def rank_month_sleep_com(sort_df,col,item) :
     i = 0 
     for dt , row in sort_df.head(20).iterrows() :  
         i += 1
@@ -257,8 +258,15 @@ def rank_month_sleep_com(sort_df,col) :
         date_str = f'{dt.year}/{dt.month:02}' 
         if dt.year == today_date.year and dt.month == today_date.month :
             date_str = f'<span class=red>{date_str}</span>'
-        hhmm = conv_time_to_str(row['sleep_ave'])
+        hhmm = conv_time_to_str(row[item])
         out.write(f"<tr><td align='right'>{i}</td><td align='right'>{hhmm}</td><td>{date_str}</td></tr>")
+
+#  起床時刻ランキング
+def rank_month_end_min() :   
+    global rank_month_end_min_col
+    rank_month_end_min_col += 1
+    sort_df = df_month.sort_values('end_ave',ascending=True)
+    rank_month_sleep_com(sort_df,rank_month_end_min_col,'end_ave')
 
 #  月の情報をdfで保持する
 #  df_month  カラム  yymm start_ave end_ave sleep_ave start_max end_max sleep_max start_min end_min sleep_min
@@ -413,6 +421,9 @@ def parse_template() :
             continue
         if "%rank_month_sleep_min%" in line :
             rank_month_sleep_min()
+            continue
+        if "%rank_month_end_min%" in line :
+            rank_month_end_min()
             continue
         if "%monthly_only_table%" in line :
             monthly_only_table()
