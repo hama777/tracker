@@ -1,5 +1,5 @@
 <html>
-    <!-- 26/01/30 v1.40 カラム処理変更 -->
+    <!-- 26/05/14 v1.41 月別起床時刻ランキング追加 -->
     <head>
         <title>Sleep Time</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -282,6 +282,24 @@
                 </table>
             </div>
         </div>
+        <h2>月別起床・入眠時刻ランキング</h2>
+        <div class="flex">
+            <div class='frame'>
+                <span style="margin-left: 30px;">起床時刻 最早(1)</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>年月</th></tr>
+                    %rank_month_end_min% 
+                </table>
+            </div>
+            <div class='frame'>
+                <span style="margin-left: 30px;">起床時刻 最早(2)</span>
+                <table class="rank">
+                    <tr><th>順位</th><th>時間</th><th>年月</th></tr>
+                    %rank_month_end_min% 
+                </table>
+            </div>
+        </div>
+
         <h2>単独月別平均</h2>
         <div class="flex">
             <div>
